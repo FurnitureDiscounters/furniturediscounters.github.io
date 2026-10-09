@@ -1,0 +1,19 @@
+<svg width="162" xmlns="http://www.w3.org/2000/svg" height="112" id="screenshot-e5ddb581-139d-8052-8008-c3f3cd63dcb4" viewBox="0 0 162 112" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" version="1.1"><style>/* latin-ext */
+@font-face {
+  font-family: 'Special Gothic Expanded One';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(https://design.penpot.app/internal/gfonts/font/specialgothicexpandedone/v2/IurO6Zxk74-YaYk1r3HOet4g75ENmBxUmOK61tA0Iu5QlpF_GhU.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Special Gothic Expanded One';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url(https://design.penpot.app/internal/gfonts/font/specialgothicexpandedone/v2/IurO6Zxk74-YaYk1r3HOet4g75ENmBxUmOK61tA0Iu5QmJF_.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style><g id="shape-e5ddb581-139d-8052-8008-c3f3cd63dcb4"><g transform="matrix(1.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000)" class="text-container" x="0" y="0" width="161.9999999999999" height="112.00000000000006" rx="0" ry="0"><defs><pattern patternUnits="objectBoundingBox" width="160.609375" height="131" id="fill-0-render-1-0"><g><rect width="160.609375" height="131" style="fill: rgb(205, 185, 143); fill-opacity: 1;"/></g></pattern></defs><g class="fills" id="fills-e5ddb581-139d-8052-8008-c3f3cd63dcb4"><text x="0" y="125" dominant-baseline="ideographic" textLength="160.609375" lengthAdjust="spacingAndGlyphs" style="text-transform: none; font-family: &quot;Special Gothic Expanded One&quot;; letter-spacing: normal; font-style: normal; font-weight: 400; white-space: pre; font-size: 100px; text-decoration: none; direction: ltr; fill: rgb(205, 185, 143); fill-opacity: 1;">FD</text></g></g></g></svg>
