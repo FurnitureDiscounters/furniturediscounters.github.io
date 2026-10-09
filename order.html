@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f4ee" />
+    <title>Your Demo Order | Furniture Discounters</title>
+    <meta
+      name="description"
+      content="Build and save a demonstration furniture order in your browser. No real orders, payments, or customer contact information are collected."
+    />
+    <meta
+      property="og:title"
+      content="Your Demo Order | Furniture Discounters"
+    />
+    <meta
+      property="og:description"
+      content="Build and save a demonstration furniture order in your browser. No real orders, payments, or customer contact information are collected."
+    />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/css/styles.css" />
+    <script type="module" src="assets/js/shared.js"></script>
+    <script type="module" src="assets/js/order.js"></script>
+  </head>
+  <body data-page="order">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="announcement">
+      <div class="container announcement-inner">
+        <span>Good design. Everyday value.</span
+        ><a href="store.html"
+          >Explore our sample collection <span aria-hidden="true">↗</span></a
+        >
+      </div>
+    </div>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a
+          class="brand"
+          href="index.html"
+          aria-label="Furniture Discounters home"
+          ><svg
+            viewBox="0 0 44 44"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            aria-hidden="true"
+          >
+            <path
+              d="M10 23V12a5 5 0 0 1 5-5h14a5 5 0 0 1 5 5v11M10 19H6v13h32V19h-4v7H10v-7ZM9 32v5m26-5v5"
+            /></svg
+          ><span
+            >Furniture<span class="brand-second"
+              >Discounters<span class="brand-dot">.</span></span
+            ></span
+          ></a
+        >
+        <nav class="desktop-nav" aria-label="Main navigation">
+          <a href="index.html">Home</a><a href="store.html">Store</a
+          ><a href="about.html">About</a
+          ><a href="order.html" aria-current="page">My Order</a>
+        </nav>
+        <div class="header-actions">
+          <a class="order-icon" href="order.html" aria-label="My order"
+            ><svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <path d="M5 7h14l1 14H4L5 7Z" />
+              <path d="M8 8V6a4 4 0 0 1 8 0v2" /></svg
+            ><span class="cart-count" data-cart-count>0</span></a
+          ><button
+            class="menu-toggle"
+            aria-expanded="false"
+            aria-controls="mobile-nav"
+            aria-label="Open navigation"
+          >
+            <span></span><span></span>
+          </button>
+        </div>
+      </div>
+      <nav
+        id="mobile-nav"
+        class="mobile-nav"
+        aria-label="Mobile navigation"
+        inert
+      >
+        <a href="index.html">Home</a><a href="store.html">Store</a
+        ><a href="about.html">About</a
+        ><a href="order.html" aria-current="page">My Order</a>
+      </nav>
+    </header>
+    <main id="main">
+      <section class="page-intro container">
+        <p class="breadcrumb">
+          <a href="index.html">Home</a><span>/</span> My Order
+        </p>
+        <p class="eyebrow">A few favorites. So many possibilities.</p>
+        <h1>Your home, <em>coming together.</em></h1>
+        <p>A place to gather the pieces you love.</p>
+      </section>
+      <section class="container order-section">
+        <div class="demo-banner" id="demo-info">
+          <span class="demo-dot"></span>
+          <div>
+            <strong>Demo Mode — Orders are not submitted to the store.</strong>
+            <p>
+              This is a browser-only demonstration. No personal information or
+              payment is collected. Orders are saved in this browser and cannot
+              be accessed from other devices or browsers. Clearing site data
+              removes them.
+            </p>
+          </div>
+        </div>
+        <p id="order-feedback" class="form-feedback" role="alert"></p>
+        <div id="cart-empty" class="empty-cart" hidden>
+          <div class="empty-illustration">
+            <svg
+              viewBox="0 0 44 44"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <path
+                d="M10 23V12a5 5 0 0 1 5-5h14a5 5 0 0 1 5 5v11M10 19H6v13h32V19h-4v7H10v-7ZM9 32v5m26-5v5"
+              />
+            </svg>
+          </div>
+          <p class="eyebrow">Every room starts with one piece</p>
+          <h2>Make yourself at home.</h2>
+          <p>
+            Your order is looking a little empty.<br />Let’s find something
+            you’ll love living with.
+          </p>
+          <a class="button button-primary" href="store.html"
+            >Discover the collection
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <path d="M4 12h16M14 6l6 6-6 6" /></svg
+          ></a>
+        </div>
+        <div id="cart-content" class="cart-layout" hidden>
+          <div class="cart-main">
+            <div class="cart-heading">
+              <h2>Your selected pieces</h2>
+              <a class="text-link" href="store.html"
+                >Keep exploring
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  aria-hidden="true"
+                >
+                  <path d="M4 12h16M14 6l6 6-6 6" /></svg
+              ></a>
+            </div>
+            <div id="cart-items"></div>
+          </div>
+          <aside class="order-summary">
+            <p class="eyebrow">A little closer to home</p>
+            <h2>Order summary</h2>
+            <div class="summary-line">
+              <span>Sample subtotal</span><span id="cart-subtotal">$0.00</span>
+            </div>
+            <div class="summary-line">
+              <span>Delivery &amp; taxes</span><span>Not calculated</span>
+            </div>
+            <div class="summary-total">
+              <span>Estimated total</span><strong id="cart-total">$0.00</strong>
+            </div>
+            <p>
+              Sample prices only. This estimate does not include delivery,
+              taxes, or assembly.
+            </p>
+            <button
+              id="create-order"
+              class="button button-primary"
+              type="button"
+            >
+              Create Demo Order
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+              >
+                <path d="M4 12h16M14 6l6 6-6 6" />
+              </svg>
+            </button>
+            <p class="summary-note">No checkout. No payment. Just a preview.</p>
+          </aside>
+        </div>
+        <section
+          id="order-confirmation"
+          class="order-confirmation"
+          aria-labelledby="confirmation-title"
+          tabindex="-1"
+          hidden
+        >
+          <span class="confirmation-check" aria-hidden="true">✓</span>
+          <p class="eyebrow">Saved in this browser</p>
+          <h2 id="confirmation-title">A little closer to your happy place.</h2>
+          <p>
+            Your demo order has been created.
+            <strong>Nothing has been sent to the store.</strong>
+          </p>
+          <div class="confirmation-number-wrap">
+            <span>YOUR EXAMPLE ORDER NUMBER</span
+            ><strong id="confirmation-number"></strong
+            ><button id="copy-order-number" class="text-button" type="button">
+              Copy order number
+            </button>
+          </div>
+          <p id="confirmation-summary"></p>
+          <a class="button button-secondary" href="store.html"
+            >Keep dreaming
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <path d="M4 12h16M14 6l6 6-6 6" /></svg
+          ></a>
+        </section>
+      </section>
+      <section class="container lookup-section" id="order-lookup">
+        <div>
+          <p class="eyebrow">Pick up where you left off</p>
+          <h2>Find your demo order.</h2>
+          <p>
+            Enter an order number created in this browser to see a simulated
+            status. This is an example tracking experience, not a real delivery
+            update.
+          </p>
+          <p class="small">
+            Try the built-in example: <strong>FD-2026-001234</strong>
+          </p>
+        </div>
+        <div class="lookup-card">
+          <form id="lookup-form">
+            <label for="lookup-number">Demo order number</label>
+            <div class="lookup-input-row">
+              <input
+                id="lookup-number"
+                name="order-number"
+                placeholder="FD-2026-001234"
+                required
+                maxlength="40"
+                autocomplete="off"
+                spellcheck="false"
+              /><button class="button button-primary" type="submit">
+                Look up
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  aria-hidden="true"
+                >
+                  <path d="M4 12h16M14 6l6 6-6 6" />
+                </svg>
+              </button>
+            </div>
+          </form>
+          <p id="lookup-feedback" class="form-feedback" role="alert"></p>
+          <div id="lookup-result" aria-live="polite"></div>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <div class="container footer-main">
+        <div class="footer-brand">
+          <a class="brand" href="index.html"
+            ><svg
+              viewBox="0 0 44 44"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <path
+                d="M10 23V12a5 5 0 0 1 5-5h14a5 5 0 0 1 5 5v11M10 19H6v13h32V19h-4v7H10v-7ZM9 32v5m26-5v5"
+              /></svg
+            ><span
+              >Furniture<span class="brand-second"
+                >Discounters<span class="brand-dot">.</span></span
+              ></span
+            ></a
+          >
+          <p>Thoughtfully chosen furniture.<br />More room for what matters.</p>
+          <span class="footer-label">A demonstration storefront</span>
+        </div>
+        <div>
+          <h2>Explore</h2>
+          <a href="index.html">Home</a><a href="store.html">Shop furniture</a
+          ><a href="about.html">About us</a
+          ><a href="order.html">My demo order</a>
+        </div>
+        <div>
+          <h2>Find your room</h2>
+          <a href="store.html?category=sofas">Sofas &amp; sectionals</a
+          ><a href="store.html?category=beds">Beds &amp; mattresses</a
+          ><a href="store.html?category=dining">Dining room</a
+          ><a href="store.html?category=office">Home office</a>
+        </div>
+        <div class="footer-contact">
+          <h2>Let’s make it home</h2>
+          <p>
+            Store address, opening hours, phone,<br />and email to be added.
+          </p>
+          <a href="about.html#contact" class="text-link"
+            >Store &amp; contact information
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <path d="M4 12h16M14 6l6 6-6 6" /></svg
+          ></a>
+          <p class="small">Business information is an editable placeholder.</p>
+        </div>
+      </div>
+      <div class="container footer-bottom">
+        <span>© <span data-year>2026</span> Furniture Discounters</span
+        ><span>Sample products &amp; prices. No real orders or payments.</span
+        ><a href="order.html#demo-info">About demo mode</a>
+      </div>
+    </footer>
+    <div
+      id="toast"
+      class="toast"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    ></div>
+    <dialog id="product-dialog" aria-label="Product details"></dialog>
+    <noscript
+      ><p class="noscript-notice">
+        Enable JavaScript to browse sample products and use the local demo order
+        experience.
+      </p></noscript
+    >
+  </body>
+</html>

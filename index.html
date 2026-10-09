@@ -1,3 +1,507 @@
-<title>Test!</title>
-<b>Example</b>
-<h1>Hello World!</h1>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f4ee" />
+    <title>Beautiful Furniture. Better Prices. | Furniture Discounters</title>
+    <meta
+      name="description"
+      content="Explore a thoughtfully curated sample furniture collection with warm style, comfortable prices, and a simple demonstration ordering experience."
+    />
+    <meta
+      property="og:title"
+      content="Beautiful Furniture. Better Prices. | Furniture Discounters"
+    />
+    <meta
+      property="og:description"
+      content="Explore a thoughtfully curated sample furniture collection with warm style, comfortable prices, and a simple demonstration ordering experience."
+    />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/css/styles.css" />
+    <link
+      rel="preload"
+      as="image"
+      href="assets/images/hero.webp"
+      fetchpriority="high"
+    />
+    <script type="module" src="assets/js/shared.js"></script>
+    <script type="module" src="assets/js/home.js"></script>
+  </head>
+  <body data-page="home">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="announcement">
+      <div class="container announcement-inner">
+        <span>Good design. Everyday value.</span
+        ><a href="store.html"
+          >Explore our sample collection <span aria-hidden="true">↗</span></a
+        >
+      </div>
+    </div>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a
+          class="brand"
+          href="index.html"
+          aria-label="Furniture Discounters home"
+          ><svg
+            viewBox="0 0 44 44"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            aria-hidden="true"
+          >
+            <path
+              d="M10 23V12a5 5 0 0 1 5-5h14a5 5 0 0 1 5 5v11M10 19H6v13h32V19h-4v7H10v-7ZM9 32v5m26-5v5"
+            /></svg
+          ><span
+            >Furniture<span class="brand-second"
+              >Discounters<span class="brand-dot">.</span></span
+            ></span
+          ></a
+        >
+        <nav class="desktop-nav" aria-label="Main navigation">
+          <a href="index.html" aria-current="page">Home</a
+          ><a href="store.html">Store</a><a href="about.html">About</a
+          ><a href="order.html">My Order</a>
+        </nav>
+        <div class="header-actions">
+          <a class="order-icon" href="order.html" aria-label="My order"
+            ><svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <path d="M5 7h14l1 14H4L5 7Z" />
+              <path d="M8 8V6a4 4 0 0 1 8 0v2" /></svg
+            ><span class="cart-count" data-cart-count>0</span></a
+          ><button
+            class="menu-toggle"
+            aria-expanded="false"
+            aria-controls="mobile-nav"
+            aria-label="Open navigation"
+          >
+            <span></span><span></span>
+          </button>
+        </div>
+      </div>
+      <nav
+        id="mobile-nav"
+        class="mobile-nav"
+        aria-label="Mobile navigation"
+        inert
+      >
+        <a href="index.html" aria-current="page">Home</a
+        ><a href="store.html">Store</a><a href="about.html">About</a
+        ><a href="order.html">My Order</a>
+      </nav>
+    </header>
+    <main id="main">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">
+            <span class="tiny-line"></span> Considered style. Comfortable
+            prices.
+          </p>
+          <h1>Beautiful furniture.<br /><em>Better prices.</em></h1>
+          <p class="hero-description">
+            A home you love starts with pieces that feel like you. Discover
+            everyday comfort, timeless design, and room to make it your own.
+          </p>
+          <div class="hero-buttons">
+            <a class="button button-primary" href="store.html"
+              >Shop furniture
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+              >
+                <path d="M4 12h16M14 6l6 6-6 6" /></svg></a
+            ><a class="text-link" href="about.html"
+              >Get to know us
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+              >
+                <path d="M4 12h16M14 6l6 6-6 6" /></svg
+            ></a>
+          </div>
+          <div class="hero-footnote">
+            <span class="hero-footnote-icon">✧</span
+            ><span>Good furniture. A better feeling of home.</span>
+          </div>
+        </div>
+        <div class="hero-image">
+          <img
+            src="assets/images/hero.webp"
+            alt="A warm, thoughtfully styled living room with comfortable furniture and natural textures"
+            width="1920"
+            height="1440"
+            fetchpriority="high"
+          />
+          <div class="hero-image-caption">
+            <span>The art of feeling at home</span
+            ><span>01 / THE LIVING EDIT</span>
+          </div>
+          <span class="image-note">Style inspiration · sample collection</span>
+        </div>
+      </section>
+      <div class="value-strip">
+        <div class="container">
+          <span><span aria-hidden="true">✧</span> Thoughtful design</span
+          ><span><span aria-hidden="true">◇</span> Everyday value</span
+          ><span
+            ><span aria-hidden="true">⌂</span> Something for every room</span
+          ><span
+            ><span aria-hidden="true">♡</span> Made for the way you live</span
+          >
+        </div>
+      </div>
+      <section class="section container reveal">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Find your everyday favorite</p>
+            <h2>Make room for living.</h2>
+          </div>
+          <a class="text-link" href="store.html"
+            >Explore all furniture
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <path d="M4 12h16M14 6l6 6-6 6" /></svg
+          ></a>
+        </div>
+        <div class="category-grid">
+          <a class="category-card" href="store.html?category=sofas"
+            ><div class="category-image">
+              <img
+                src="assets/images/sofa.webp"
+                alt="Sofas &amp; sectionals"
+                width="500"
+                height="600"
+                loading="lazy"
+              />
+            </div>
+            <span
+              >Sofas &amp; sectionals<svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+              >
+                <path d="M4 12h16M14 6l6 6-6 6" /></svg></span></a
+          ><a class="category-card" href="store.html?category=beds"
+            ><div class="category-image">
+              <img
+                src="assets/images/bed.webp"
+                alt="Beds &amp; mattresses"
+                width="500"
+                height="600"
+                loading="lazy"
+              />
+            </div>
+            <span
+              >Beds &amp; mattresses<svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+              >
+                <path d="M4 12h16M14 6l6 6-6 6" /></svg></span></a
+          ><a class="category-card" href="store.html?category=dining"
+            ><div class="category-image">
+              <img
+                src="assets/images/dining.webp"
+                alt="Dining tables &amp; chairs"
+                width="500"
+                height="600"
+                loading="lazy"
+              />
+            </div>
+            <span
+              >Dining tables &amp; chairs<svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+              >
+                <path d="M4 12h16M14 6l6 6-6 6" /></svg></span></a
+          ><a class="category-card" href="store.html?category=storage"
+            ><div class="category-image">
+              <img
+                src="assets/images/dresser.webp"
+                alt="Dressers &amp; storage"
+                width="500"
+                height="600"
+                loading="lazy"
+              />
+            </div>
+            <span
+              >Dressers &amp; storage<svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+              >
+                <path d="M4 12h16M14 6l6 6-6 6" /></svg></span></a
+          ><a class="category-card" href="store.html?category=office"
+            ><div class="category-image">
+              <img
+                src="assets/images/desk.webp"
+                alt="Home office"
+                width="500"
+                height="600"
+                loading="lazy"
+              />
+            </div>
+            <span
+              >Home office<svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+              >
+                <path d="M4 12h16M14 6l6 6-6 6" /></svg></span></a
+          ><a class="category-card" href="store.html?category=living"
+            ><div class="category-image">
+              <img
+                src="assets/images/armchair.webp"
+                alt="Living room"
+                width="500"
+                height="600"
+                loading="lazy"
+              />
+            </div>
+            <span
+              >Living room<svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+              >
+                <path d="M4 12h16M14 6l6 6-6 6" /></svg></span
+          ></a>
+        </div>
+      </section>
+      <section class="section featured-section">
+        <div class="container reveal">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Featured products. Everyday favorites.</p>
+              <h2>A little inspiration for home.</h2>
+            </div>
+            <a class="text-link" href="store.html"
+              >Shop the collection
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+              >
+                <path d="M4 12h16M14 6l6 6-6 6" /></svg
+            ></a>
+          </div>
+          <div
+            id="featured-products"
+            class="product-grid featured-grid"
+            aria-label="Featured sample products"
+          >
+            <p class="loading-state">Finding your next favorite…</p>
+          </div>
+          <p class="collection-note">
+            An example collection to inspire you. All products, prices, and
+            availability are for demonstration.
+          </p>
+        </div>
+      </section>
+      <section class="section container story-section reveal">
+        <div class="story-image">
+          <img
+            src="assets/images/about.webp"
+            alt="Inviting furniture and natural accents in a thoughtfully arranged room"
+            width="1000"
+            height="1000"
+            loading="lazy"
+          />
+          <div class="image-stamp">A place<br />to be <em>you.</em></div>
+        </div>
+        <div class="story-copy">
+          <p class="eyebrow">The Furniture Discounters approach</p>
+          <h2>Great style.<br />Down-to-earth value.</h2>
+          <p>
+            Beautiful rooms don’t have to come with a big price tag. We’re
+            creating a place to find considered furniture that fits your home,
+            your everyday life, and your budget.
+          </p>
+          <div class="reason">
+            <span>01</span>
+            <div>
+              <h3>Style that feels like home</h3>
+              <p>
+                Comfortable silhouettes, warm textures, and pieces that work
+                beautifully together.
+              </p>
+            </div>
+          </div>
+          <div class="reason">
+            <span>02</span>
+            <div>
+              <h3>More possibility for your budget</h3>
+              <p>
+                Explore approachable sample prices across the rooms you use
+                every day.
+              </p>
+            </div>
+          </div>
+          <div class="reason">
+            <span>03</span>
+            <div>
+              <h3>A simpler way to explore</h3>
+              <p>
+                Find your favorites, compare the details, and build a demo order
+                at your own pace.
+              </p>
+            </div>
+          </div>
+          <a class="text-link" href="about.html"
+            >Our approach to home
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <path d="M4 12h16M14 6l6 6-6 6" /></svg
+          ></a>
+        </div>
+      </section>
+      <section class="container promo-wrap reveal">
+        <div class="promo">
+          <div>
+            <p class="eyebrow">Your next chapter starts at home</p>
+            <h2>Small refresh.<br /><em>Whole new feeling.</em></h2>
+            <p>
+              A favorite corner. A fresh perspective. Find a piece that makes
+              your space feel a little more you.
+            </p>
+            <a class="button button-light" href="store.html?category=living"
+              >Explore living room
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+              >
+                <path d="M4 12h16M14 6l6 6-6 6" /></svg
+            ></a>
+          </div>
+          <div class="promo-image">
+            <img
+              src="assets/images/armchair.webp"
+              alt="An accent chair for a comfortable corner at home"
+              width="1000"
+              height="1000"
+              loading="lazy"
+            />
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <div class="container footer-main">
+        <div class="footer-brand">
+          <a class="brand" href="index.html"
+            ><svg
+              viewBox="0 0 44 44"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <path
+                d="M10 23V12a5 5 0 0 1 5-5h14a5 5 0 0 1 5 5v11M10 19H6v13h32V19h-4v7H10v-7ZM9 32v5m26-5v5"
+              /></svg
+            ><span
+              >Furniture<span class="brand-second"
+                >Discounters<span class="brand-dot">.</span></span
+              ></span
+            ></a
+          >
+          <p>Thoughtfully chosen furniture.<br />More room for what matters.</p>
+          <span class="footer-label">A demonstration storefront</span>
+        </div>
+        <div>
+          <h2>Explore</h2>
+          <a href="index.html">Home</a><a href="store.html">Shop furniture</a
+          ><a href="about.html">About us</a
+          ><a href="order.html">My demo order</a>
+        </div>
+        <div>
+          <h2>Find your room</h2>
+          <a href="store.html?category=sofas">Sofas &amp; sectionals</a
+          ><a href="store.html?category=beds">Beds &amp; mattresses</a
+          ><a href="store.html?category=dining">Dining room</a
+          ><a href="store.html?category=office">Home office</a>
+        </div>
+        <div class="footer-contact">
+          <h2>Let’s make it home</h2>
+          <p>
+            Store address, opening hours, phone,<br />and email to be added.
+          </p>
+          <a href="about.html#contact" class="text-link"
+            >Store &amp; contact information
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <path d="M4 12h16M14 6l6 6-6 6" /></svg
+          ></a>
+          <p class="small">Business information is an editable placeholder.</p>
+        </div>
+      </div>
+      <div class="container footer-bottom">
+        <span>© <span data-year>2026</span> Furniture Discounters</span
+        ><span>Sample products &amp; prices. No real orders or payments.</span
+        ><a href="order.html#demo-info">About demo mode</a>
+      </div>
+    </footer>
+    <div
+      id="toast"
+      class="toast"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    ></div>
+    <dialog id="product-dialog" aria-label="Product details"></dialog>
+    <noscript
+      ><p class="noscript-notice">
+        Enable JavaScript to browse sample products and use the local demo order
+        experience.
+      </p></noscript
+    >
+  </body>
+</html>

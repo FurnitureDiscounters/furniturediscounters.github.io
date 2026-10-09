@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f4ee" />
+    <title>Shop the Collection | Furniture Discounters</title>
+    <meta
+      name="description"
+      content="Browse 12 example furniture products. Search, filter by room, compare sample prices, and save your favorites to a local demo order."
+    />
+    <meta
+      property="og:title"
+      content="Shop the Collection | Furniture Discounters"
+    />
+    <meta
+      property="og:description"
+      content="Browse 12 example furniture products. Search, filter by room, compare sample prices, and save your favorites to a local demo order."
+    />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/css/styles.css" />
+    <script type="module" src="assets/js/shared.js"></script>
+    <script type="module" src="assets/js/store.js"></script>
+  </head>
+  <body data-page="store">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="announcement">
+      <div class="container announcement-inner">
+        <span>Good design. Everyday value.</span
+        ><a href="store.html"
+          >Explore our sample collection <span aria-hidden="true">↗</span></a
+        >
+      </div>
+    </div>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a
+          class="brand"
+          href="index.html"
+          aria-label="Furniture Discounters home"
+          ><svg
+            viewBox="0 0 44 44"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            aria-hidden="true"
+          >
+            <path
+              d="M10 23V12a5 5 0 0 1 5-5h14a5 5 0 0 1 5 5v11M10 19H6v13h32V19h-4v7H10v-7ZM9 32v5m26-5v5"
+            /></svg
+          ><span
+            >Furniture<span class="brand-second"
+              >Discounters<span class="brand-dot">.</span></span
+            ></span
+          ></a
+        >
+        <nav class="desktop-nav" aria-label="Main navigation">
+          <a href="index.html">Home</a
+          ><a href="store.html" aria-current="page">Store</a
+          ><a href="about.html">About</a><a href="order.html">My Order</a>
+        </nav>
+        <div class="header-actions">
+          <a class="order-icon" href="order.html" aria-label="My order"
+            ><svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <path d="M5 7h14l1 14H4L5 7Z" />
+              <path d="M8 8V6a4 4 0 0 1 8 0v2" /></svg
+            ><span class="cart-count" data-cart-count>0</span></a
+          ><button
+            class="menu-toggle"
+            aria-expanded="false"
+            aria-controls="mobile-nav"
+            aria-label="Open navigation"
+          >
+            <span></span><span></span>
+          </button>
+        </div>
+      </div>
+      <nav
+        id="mobile-nav"
+        class="mobile-nav"
+        aria-label="Mobile navigation"
+        inert
+      >
+        <a href="index.html">Home</a
+        ><a href="store.html" aria-current="page">Store</a
+        ><a href="about.html">About</a><a href="order.html">My Order</a>
+      </nav>
+    </header>
+    <main id="main">
+      <section class="page-intro container">
+        <p class="breadcrumb">
+          <a href="index.html">Home</a><span>/</span> Store
+        </p>
+        <p class="eyebrow">Considered pieces. Everyday spaces.</p>
+        <div class="intro-row">
+          <div>
+            <h1>Find your kind of <em>home.</em></h1>
+            <p>
+              From the first morning coffee to the last goodnight.<br />Discover
+              furniture for all the living in between.
+            </p>
+          </div>
+          <span class="collection-seal"
+            >THE HOME<br /><strong>collection</strong
+            ><span>12 SAMPLE PIECES</span></span
+          >
+        </div>
+      </section>
+      <section class="container catalog-section" aria-label="Furniture catalog">
+        <div class="demo-banner">
+          <span class="demo-dot"></span>
+          <p>
+            <strong>A little inspiration, in demo mode.</strong> Products,
+            prices, photos, and availability are illustrative examples. Orders
+            are not submitted to the store.
+          </p>
+        </div>
+        <div class="catalog-toolbar">
+          <div class="search-field">
+            <label class="sr-only" for="product-search">Search furniture</label
+            ><svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <circle cx="10.5" cy="10.5" r="6.5" />
+              <path d="m16 16 5 5" /></svg
+            ><input
+              type="search"
+              id="product-search"
+              placeholder="Find your next favorite…"
+              autocomplete="off"
+            />
+          </div>
+          <div class="filter-field">
+            <label for="category-filter">Category</label
+            ><select id="category-filter">
+              <option value="all">All furniture</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label for="sort-products">Sort by</label
+            ><select id="sort-products">
+              <option value="featured">Featured</option>
+              <option value="price-asc">Price: low to high</option>
+              <option value="price-desc">Price: high to low</option>
+              <option value="name">Name: A to Z</option>
+            </select>
+          </div>
+        </div>
+        <div class="catalog-results-bar">
+          <p id="result-count" role="status" aria-live="polite">
+            Loading sample collection…
+          </p>
+          <button id="clear-filters" class="text-button" type="button">
+            Reset filters
+          </button>
+        </div>
+        <div id="catalog-status" role="status"></div>
+        <div id="product-grid" class="product-grid"></div>
+        <p class="collection-note">
+          Imagery is for inspiration. Sample specifications and prices do not
+          represent an offer for sale.
+        </p>
+      </section>
+      <section class="container shop-bottom">
+        <span class="eyebrow">A room that feels right</span>
+        <h2>Thoughtfully chosen.<br />Simply yours.</h2>
+        <a class="text-link" href="about.html"
+          >Get to know Furniture Discounters
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            aria-hidden="true"
+          >
+            <path d="M4 12h16M14 6l6 6-6 6" /></svg
+        ></a>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <div class="container footer-main">
+        <div class="footer-brand">
+          <a class="brand" href="index.html"
+            ><svg
+              viewBox="0 0 44 44"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <path
+                d="M10 23V12a5 5 0 0 1 5-5h14a5 5 0 0 1 5 5v11M10 19H6v13h32V19h-4v7H10v-7ZM9 32v5m26-5v5"
+              /></svg
+            ><span
+              >Furniture<span class="brand-second"
+                >Discounters<span class="brand-dot">.</span></span
+              ></span
+            ></a
+          >
+          <p>Thoughtfully chosen furniture.<br />More room for what matters.</p>
+          <span class="footer-label">A demonstration storefront</span>
+        </div>
+        <div>
+          <h2>Explore</h2>
+          <a href="index.html">Home</a><a href="store.html">Shop furniture</a
+          ><a href="about.html">About us</a
+          ><a href="order.html">My demo order</a>
+        </div>
+        <div>
+          <h2>Find your room</h2>
+          <a href="store.html?category=sofas">Sofas &amp; sectionals</a
+          ><a href="store.html?category=beds">Beds &amp; mattresses</a
+          ><a href="store.html?category=dining">Dining room</a
+          ><a href="store.html?category=office">Home office</a>
+        </div>
+        <div class="footer-contact">
+          <h2>Let’s make it home</h2>
+          <p>
+            Store address, opening hours, phone,<br />and email to be added.
+          </p>
+          <a href="about.html#contact" class="text-link"
+            >Store &amp; contact information
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <path d="M4 12h16M14 6l6 6-6 6" /></svg
+          ></a>
+          <p class="small">Business information is an editable placeholder.</p>
+        </div>
+      </div>
+      <div class="container footer-bottom">
+        <span>© <span data-year>2026</span> Furniture Discounters</span
+        ><span>Sample products &amp; prices. No real orders or payments.</span
+        ><a href="order.html#demo-info">About demo mode</a>
+      </div>
+    </footer>
+    <div
+      id="toast"
+      class="toast"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    ></div>
+    <dialog id="product-dialog" aria-label="Product details"></dialog>
+    <noscript
+      ><p class="noscript-notice">
+        Enable JavaScript to browse sample products and use the local demo order
+        experience.
+      </p></noscript
+    >
+  </body>
+</html>
