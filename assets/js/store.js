@@ -4,7 +4,8 @@ const $ = s => document.querySelector(s);
 const grid = $('#product-grid'), search = $('#product-search'), category = $('#category-filter'), sort = $('#sort-products');
 const status = $('#catalog-status'), count = $('#result-count'), clear = $('#clear-filters');
 let subcategories = [];
-const subnav = document.createElement('nav'); subnav.className = 'category-chips'; subnav.setAttribute('aria-label', 'Subcategories'); grid.before(subnav);
+const categoryNav=document.createElement('nav');categoryNav.className='collection-strip store-category-strip';categoryNav.setAttribute('aria-label','Categories');categoryNav.tabIndex=0;grid.before(categoryNav);
+const subnav = document.createElement('nav'); subnav.className = 'category-chips collection-strip'; subnav.setAttribute('aria-label', 'Subcategories');subnav.tabIndex=0; grid.before(subnav);
 let selectedSubcategory = new URLSearchParams(location.search).get('subcategory') || 'all';
 let categories = [], pages = [], pageIndex = 0, generation = 0, debounce;
 const pagination = document.createElement('div'); pagination.className = 'catalog-pagination';
@@ -35,7 +36,8 @@ async function load(reset = true) {
   const availableSubs = subcategories.filter(s => s.category === values.category);
   if (!availableSubs.some(s => s.id === selectedSubcategory)) selectedSubcategory = 'all';
   values.subcategory = selectedSubcategory;
-  subnav.innerHTML = availableSubs.length ? '<button type="button" data-subcategory="all" aria-current="'+(selectedSubcategory === 'all')+'">All pieces</button>' + availableSubs.map(s=>`<button type="button" data-subcategory="${e(s.id)}" aria-current="${s.id===selectedSubcategory}">${e(s.name)}</button>`).join('') : '';
+  categoryNav.innerHTML='<button type="button" data-store-category="all" aria-current="'+(values.category==='all')+'">All furniture</button>'+categories.map(c=>`<button type="button" data-store-category="${e(c.id)}" aria-current="${values.category===c.id}">${c.image?`<img src="${e(c.image)}" alt="" width="120" height="90" loading="lazy">`:'<span class="collection-placeholder" aria-hidden="true">◇</span>'}<span>${e(c.name)}</span></button>`).join('');
+  subnav.innerHTML = availableSubs.length ? '<button type="button" data-subcategory="all" aria-current="'+(selectedSubcategory === 'all')+'">All pieces</button>' + availableSubs.map(s=>`<button type="button" data-subcategory="${e(s.id)}" aria-current="${s.id===selectedSubcategory}">${s.image?`<img src="${e(s.image)}" alt="" width="120" height="90" loading="lazy">`:'<span class="collection-placeholder" aria-hidden="true">◇</span>'}<span>${e(s.name)}</span></button>`).join('') : '';
 
   $('h1').innerHTML = selected ? e(selected.name) : 'Find your kind of <em>home.</em>';
   $('.intro-row p').textContent = selected?.description || 'Discover furniture for all the living in between.';
@@ -64,6 +66,7 @@ function reset() { clearTimeout(debounce); search.value = ''; selectedSubcategor
 search.placeholder = 'Search name, SKU or material…'; search.maxLength = 160;
 search.addEventListener('input', () => { clearTimeout(debounce); generation++; debounce = setTimeout(() => void load(), 500); });
 for (const input of [category, sort]) input.addEventListener('change', () => { clearTimeout(debounce); void load(); });
+categoryNav.addEventListener('click',event=>{const button=event.target.closest('[data-store-category]');if(button){category.value=button.dataset.storeCategory;selectedSubcategory='all';void load();}});
 subnav.addEventListener('click', event => { const button=event.target.closest('[data-subcategory]'); if(button){selectedSubcategory=button.dataset.subcategory; void load();} });
 clear.addEventListener('click', reset);
 $('#previous-page').addEventListener('click', () => { if (pageIndex > 0) { pageIndex--; render(); grid.scrollIntoView({ block: 'start' }); } });

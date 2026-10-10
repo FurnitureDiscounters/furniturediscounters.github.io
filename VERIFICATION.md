@@ -48,3 +48,13 @@ npx firebase emulators:exec --project demo-furniture-discounters --only auth,fir
 Each command starts with a fresh emulator database. Rebuild the editor before running the browser checks. Product photos resolve from the available local/cloud catalog; older records whose products have been removed may show Photo unavailable. Existing inquiry records have no historical photo path in their immutable schema.
 
 The simplified order editor removes customer contact and quantity controls, retains Add furniture (one piece per addition), and preserves older imported contact/quantity data internally. The standalone HTML is provided at `downloads/furniture-editor.html`; the ZIP contains the same HTML. Offline save/backup browser checks and cloud editor integration checks cover the simplified form.
+
+## Collection photo rows and permanent deletion (2026-10-10)
+
+- Production storefront/editor builds passed. Seven model tests and seven Standard Firestore rule tests passed.
+- Offline browser checks cover category/subcategory photo upload, photo bytes in public exports and private backups, restored offline order deletion, thumbnail loading, and one-row homepage scrolling at 1440/768/390/320 pixels without page overflow. Preview checks passed.
+- Auth/Firestore browser checks cover permanent website inquiry deletion, lookup returning no order, live removal on two connected editors, removal from a previously disconnected editor on reconnection, persistence after reload, and permanent deletion of a published private order followed by an empty cloud restore.
+- Order-number browser checks and weekly reference/collision tests passed. Customer/unverified/other-user deletion remains denied; authorized owner deletion succeeds.
+- Current ZIP matches the standalone HTML byte for byte and passes ZIP integrity checks. SHA-256: `6e75082fb943469c3bb99915188ff981ba38475c86bfedccacf64cbc891047c0`. No production account password is embedded.
+
+**Production Firestore rules are still not deployed here.** CLI inspection failed because no Firebase login is available, and the cloud network excludes production Firebase endpoints. Website publishing does not deploy database rules. Use the updated editor's Copy rules button, open Firebase rules, paste and Publish. Until then, online inquiry deletion is blocked and leaves the order intact; offline order deletion works. The editor supplies the complete rules and a download fallback. Hash receipts contain no order contents and prevent older copies from republishing deleted records; exported backup files cannot be erased remotely.

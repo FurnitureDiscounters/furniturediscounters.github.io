@@ -4,6 +4,7 @@ service cloud.firestore {
     // Public catalog/current and private editor/current: revision, parts, updatedAt.
     // Version parts: bounded JSON; public snapshots exclude private records.
     // catalogPhotos: immutable, bounded WebP data URL; orders: owner-only JSON and timestamp.
+    // deleted-orders revision retains only hash receipts, preventing old backups from republishing deleted records.
     function owner() { return request.auth != null && (request.auth.uid == 'YHWYz24VL4hQ3vZWQv0hUBxo8Xw1' || (request.auth.token.email == 'furniture.discounters.offcial@gmail.com' && request.auth.token.email_verified == true)); }
     function pointer(v) { return v.keys().hasAll(['revision','parts','updatedAt']) && v.keys().hasOnly(['revision','parts','updatedAt']) && v.revision.matches('^[A-Za-z0-9_-]{1,80}$') && v.parts is int && v.parts >= 1 && v.parts <= 100 && v.updatedAt == request.time; }
     function part(v) { return v.keys().hasAll(['json']) && v.keys().hasOnly(['json']) && v.json is string && v.json.size() > 0 && v.json.size() <= 150000; }
@@ -64,7 +65,8 @@ service cloud.firestore {
         request.resource.data.keys().hasOnly(['number','items','createdAt']) &&
         request.resource.data.number == id && request.resource.data.createdAt == request.time && lines(request.resource.data.items);
       allow list: if owner();
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if owner();
     }
     // Deny every other collection, including role documents.
     match /{document=**} { allow read, write: if false; }

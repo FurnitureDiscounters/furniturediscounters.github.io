@@ -1,3 +1,4 @@
+import { collectionPhotoPath } from '../collection-photos.js';
 import { readFirebaseCatalog, cloudPhoto } from './firebase-catalog.js';
 import { validateDatabase, filterProducts } from '../catalog-model.js';
 export const PAGE_SIZE = 24;
@@ -13,8 +14,8 @@ async function withPhotos(product,full=false){const image=await photoURL(product
 export async function photoURL(path) { return localPhotos()?path||'':path?await cloudPhoto(path):''; }
 export function categoryName(id) { return database?.categories.find(c => c.id === id)?.name || 'Furniture'; }
 export function subcategoryName(id) { return database?.subcategories.find(c => c.id === id)?.name || ''; }
-export async function getCategories() { const categories=(await catalog()).categories.filter(c=>c.active).sort((a,b)=>a.sortOrder-b.sortOrder);return Promise.all(categories.map(async c=>({...c,image:await photoURL(c.imagePath)}))); }
-export async function getSubcategories(category='all') { return (await catalog()).subcategories.filter(s => s.active && (category==='all'||s.category===category)); }
+export async function getCategories() { const data=await catalog(),categories=data.categories.filter(c=>c.active).sort((a,b)=>a.sortOrder-b.sortOrder);return Promise.all(categories.map(async c=>({...c,image:await photoURL(collectionPhotoPath(data,c))}))); }
+export async function getSubcategories(category='all') { const data=await catalog();return Promise.all(data.subcategories.filter(s => s.active && (category==='all'||s.category===category)).map(async s=>({...s,image:await photoURL(collectionPhotoPath(data,s,'subcategory'))}))); }
 export function displayProduct(data, id=data.id) {
   const purchasable=data.active&&data.available&&data.stock>0;
   return { ...data,id,image:data.images[0]||'',price:data.priceCents/100,purchasable,availability:purchasable?'Ask about pickup availability':'Currently unavailable' };

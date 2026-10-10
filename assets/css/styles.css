@@ -2815,3 +2815,25 @@ body[data-page="editor"] .photo-editor img { max-height:160px; max-width:200px; 
 .order-photo-missing { display: grid; place-items: center; flex: 0 0 74px !important; width: 74px; min-height: 74px; font-size: 11px; text-align: center; background: var(--cream); border-radius: 5px; }
 #inquiry-products { max-width: 560px; margin: 24px auto; text-align: left; }
 #created-order-number { display: block; font-size: 2rem; letter-spacing: .12em; }
+
+/* Single-row collection navigation on the storefront and in the editor. */
+#home-categories { display:flex; flex-wrap:nowrap; gap:20px; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x proximity; padding-bottom:16px; }
+#home-categories .category-card { flex:0 0 clamp(200px,28vw,320px); min-width:0; scroll-snap-align:start; }
+#home-categories .category-image { height:230px; }
+#home-categories .category-monogram { min-height:230px; }
+.collection-scroll-controls { display:flex; gap:10px; justify-content:flex-end; margin-bottom:14px; }
+.collection-scroll-controls .button { padding:8px 18px; font-size:22px; }
+.collection-strip { display:flex; flex-wrap:nowrap!important; gap:12px; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x proximity; padding:4px 2px 14px; margin:12px 0; min-width:0; }
+.collection-strip button { flex:0 0 148px; display:flex!important; flex-direction:column; justify-content:center; gap:8px; min-height:132px; width:148px!important; margin:0!important; padding:10px!important; border:1px solid #ddd3c5; border-radius:10px; background:#fffaf3; color:#332a23; cursor:pointer; scroll-snap-align:start; white-space:normal; text-align:left; }
+.collection-strip button img { width:126px; height:86px; border-radius:6px; object-fit:cover; }
+.collection-strip button span { display:block; }
+.collection-strip button[aria-current="true"] { outline:2px solid var(--category-accent,#7e6049); outline-offset:-2px; }
+.collection-placeholder { display:grid!important; place-items:center; height:86px; font-size:30px; color:#a58c6a; background:#f0e9df; border-radius:6px; }
+body[data-page="editor"] .editor-layout { display:block; }
+body[data-page="editor"] .category-sidebar { min-width:0; }
+body[data-page="editor"] #category-list { flex-wrap:nowrap; }
+body[data-page="editor"] #subcategory-list { max-width:100%; }
+
+.order-row-actions { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:14px 0; }
+.order-check { display:flex; align-items:center; gap:10px; cursor:pointer; padding:10px 0; }
+.order-check input { width:22px; height:22px; accent-color:var(--brown); }

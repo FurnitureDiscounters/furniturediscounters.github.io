@@ -12,8 +12,8 @@ with sync_playwright() as p:
  page.add_init_script("Object.defineProperty(window,'showOpenFilePicker',{value:undefined});Object.defineProperty(window,'showSaveFilePicker',{value:undefined});")
  page.goto(EDITOR);expect(page.locator('#save-status')).to_contain_text('Saved on this computer')
  expect(page.locator('#login-form')).to_have_count(0);expect(page.locator('[data-category]')).to_have_count(7)
- page.locator('#new-category').click();page.locator('#category-form [name="name"]').fill('Patio');page.locator('#category-form [name="accent"]').fill('#335577');page.locator('#category-form [name="columns"]').select_option('2');page.locator('#category-form .button-primary').click();expect(page.locator('#selected-category')).to_have_text('Patio')
- page.locator('#new-subcategory').click();page.locator('#subcategory-form [name="name"]').fill('Outdoor Sofas');page.locator('#subcategory-form .button-primary').click();expect(page.locator('#subcategory-list')).to_contain_text('Outdoor Sofas')
+ page.locator('#new-category').click();page.locator('#category-form [name="name"]').fill('Patio');page.locator('#category-form [name="accent"]').fill('#335577');page.locator('#category-form [name="columns"]').select_option('2');page.locator('#category-photo-upload').set_input_files('assets/images/bed.webp');expect(page.locator('#category-photo-preview img')).to_be_visible();page.locator('#category-form .button-primary').click();expect(page.locator('#selected-category')).to_have_text('Patio')
+ page.locator('#new-subcategory').click();page.locator('#subcategory-form [name="name"]').fill('Outdoor Sofas');page.locator('#subcategory-photo-upload').set_input_files('assets/images/dining.webp');expect(page.locator('#subcategory-photo-preview img')).to_be_visible();page.locator('#subcategory-form .button-primary').click();expect(page.locator('#subcategory-list')).to_contain_text('Outdoor Sofas')
  page.locator('#new-product').click();page.locator('#product-form [name="name"]').fill('Outdoor Sofa');page.locator('#product-form [name="sku"]').fill('PATIO1');page.locator('#product-form [name="price"]').fill('999');page.locator('#product-form [name="dimensions"]').fill('80 × 36 × 34 in');page.locator('#product-form [name="material"]').fill('Teak')
  page.locator('#product-photo-upload').set_input_files('assets/images/sofa.webp');expect(page.locator('#product-image-paths')).not_to_have_value('');expect(page.locator('#photo-preview img')).to_have_count(1)
  page.locator('#product-form .button-primary').click();expect(page.locator('#product-editor')).to_be_hidden();expect(page.locator('#editor-products .product-card')).to_have_count(1)
@@ -24,7 +24,7 @@ with sync_playwright() as p:
  with page.expect_download() as info:page.locator('#export-website').click()
  public_path=tempfile.mktemp(suffix='.zip');info.value.save_as(public_path)
  with zipfile.ZipFile(public_path) as z:
-  exported=json.loads(z.read('assets/data/catalog.json'));assert 'orders' not in exported;assert 'PRIVATE CUSTOMER' not in json.dumps(exported);assert 'private@tests.invalid' not in json.dumps(exported);photo=exported['products'][0]['images'][0];image=z.read(photo);assert len(image)>0
+  exported=json.loads(z.read('assets/data/catalog.json'));assert 'orders' not in exported;assert 'PRIVATE CUSTOMER' not in json.dumps(exported);assert 'private@tests.invalid' not in json.dumps(exported);photo=exported['products'][0]['images'][0];image=z.read(photo);assert len(image)>0;collection_images={c['imagePath']:z.read(c['imagePath']) for c in exported['categories']+exported['subcategories'] if c.get('imagePath')};assert len(collection_images)==2
  with page.expect_download() as info:page.locator('#backup-database').click()
  backup_path=tempfile.mktemp(suffix='.zip');info.value.save_as(backup_path)
  with zipfile.ZipFile(backup_path) as z:assert json.loads(z.read('database.json'))['orders'][0]['number']=='LOCAL-123';assert z.read(photo)==image
@@ -32,16 +32,21 @@ with sync_playwright() as p:
  other=browser.new_context();restored=other.new_page();restored.add_init_script("Object.defineProperty(window,'showOpenFilePicker',{value:undefined});")
  restored.goto(EDITOR);expect(restored.locator('#save-status')).to_contain_text('Saved on this computer');restored.on('dialog',lambda dialog:dialog.accept());restored.locator('#database-file').set_input_files(backup_path);expect(restored.locator('#editor-products .product-card')).to_have_count(1);expect(restored.locator('#save-status')).to_contain_text('1 local orders')
  assert restored.locator('#editor-products img').evaluate('(img)=>img.complete && img.naturalWidth>0')
- other.close()
+ restored.locator('[data-tab="orders"]').click();restored.locator('[data-delete-order]').click();expect(restored.locator('#order-results')).not_to_contain_text('LOCAL-123');restored.reload();expect(restored.locator('#save-status')).to_contain_text('0 local orders');other.close()
  # Use only exported data/assets to test the actual public bundles, without modifying live source inventory.
  page.route('**/assets/data/catalog.json',lambda route:route.fulfill(content_type='application/json',body=json.dumps(exported)))
  page.route('**/'+photo,lambda route:route.fulfill(content_type='image/webp',body=image))
+ for path,blob in collection_images.items():page.route('**/'+path,lambda route,request,blob=blob:route.fulfill(content_type='image/webp',body=blob))
  cat=exported['products'][0]['category'];sub=exported['products'][0]['subcategory']
  page.goto(ROOT+'store.html?catalog=local&category='+cat);expect(page.locator('.product-card')).to_have_count(1);expect(page.locator('#subcategory-list')).to_have_count(0);expect(page.locator('[data-subcategory="'+sub+'"]')).to_be_visible();page.locator('[data-subcategory="'+sub+'"]').click()
+ assert page.locator('[data-subcategory="'+sub+'"] img').evaluate('(img)=>img.complete&&img.naturalWidth>0')
  assert page.locator('.catalog-section').evaluate("el=>el.style.getPropertyValue('--category-accent')")=='#335577'
  assert page.locator('.catalog-section').evaluate("el=>el.style.getPropertyValue('--category-columns')")=='2'
  expect(page.locator('.product-card del')).to_have_text('$999');expect(page.locator('.product-card .current-price')).to_have_text('$799');page.locator('[data-action="details"]').first.click();expect(page.locator('#product-dialog')).to_contain_text('Teak');expect(page.locator('#product-dialog')).to_contain_text('80 × 36 × 34 in');expect(page.locator('#product-dialog del')).to_have_text('$999')
  page.locator('[data-action="close-details"]').first.click();page.locator('.product-card [data-action="add"]').click();expect(page.locator('[data-cart-count]').first).to_have_text('1');page.goto(ROOT+'order.html?catalog=local');expect(page.locator('#cart-total')).to_have_text('$799');expect(page.locator('#submit-inquiry')).to_be_enabled();expect(page.locator('#public-order-lookup')).to_be_visible()
+ page.goto(ROOT+'index.html?catalog=local');expect(page.locator('#home-categories .category-card')).to_have_count(7);expect(page.locator('#home-categories img')).to_have_count(7)
+ for width in [1440,768,390,320]:
+  page.set_viewport_size({'width':width,'height':900});row=page.locator('#home-categories');row.evaluate('el=>el.scrollLeft=0');expect(page.locator('#home-categories-next')).to_be_enabled();assert row.evaluate('el=>el.scrollWidth>el.clientWidth');assert row.locator('.category-card').evaluate_all('els=>new Set(els.map(el=>Math.round(el.getBoundingClientRect().top))).size===1');page.locator('#home-categories-next').click();page.wait_for_function('document.querySelector("#home-categories").scrollLeft>0');assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
  for target in [EDITOR,ROOT+'store.html?catalog=local&category='+cat,ROOT+'order.html?catalog=local']:
   page.goto(target)
   for width in [1440,768,390,320]:

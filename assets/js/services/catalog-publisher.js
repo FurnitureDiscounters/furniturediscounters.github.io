@@ -36,7 +36,10 @@ export async function publishCatalog(database,readPhoto,onProgress=()=>{},expect
     const db=catalogDatabase(),current=doc(db,'catalog','current'),previous=await getDoc(current),previousEditor=await getDoc(doc(db,'editor','current')),base=previous.exists()?previous.data().revision:null;
     if(base!==null&&expectedRevision===undefined)throw new Error('Firebase already contains a catalog. Load from Firebase before publishing. Back up local drafts first.');
     if(expectedRevision!==undefined&&expectedRevision!==base)throw new Error('The online catalog changed. Load from Firebase before publishing to avoid overwriting another update.');
-    const catalog=publicCatalog(database),paths=new Set([...database.products.flatMap(p=>p.images),...database.categories.map(c=>c.imagePath).filter(Boolean)]);
+    const deletionDocs=await getDocs(query(collection(db,'orders'),where('revision','==','deleted-orders'))),deleted=new Set(deletionDocs.docs.map(d=>d.id));
+    const orderKeys=await Promise.all(database.orders.map(async o=>({order:o,key:'deleted_'+await orderDeletionKey(o)})));
+    database={...database,orders:orderKeys.filter(v=>!deleted.has(v.key)).map(v=>v.order)};
+    const catalog=publicCatalog(database),paths=new Set([...database.products.flatMap(p=>p.images),...database.categories.map(c=>c.imagePath).filter(Boolean),...database.subcategories.map(s=>s.imagePath).filter(Boolean)]);
     let n=0;
     for(const path of paths){onProgress(`Uploading photos ${++n} of ${paths.size}…`);if(!path.startsWith('assets/products/'))continue;const ref=doc(db,'catalogPhotos',await photoKey(path)),existing=await getDoc(ref);if(existing.exists())continue;const blob=await readPhoto(path);if(!blob)throw new Error(`Missing photo: ${path}. Open your photo backup before publishing.`);await setDoc(ref,{data:await optimizedPhoto(blob)});}
     const json=asciiJSON(catalog),chunks=[];for(let i=0;i<json.length;i+=150000)chunks.push(json.slice(i,i+150000));
@@ -46,11 +49,11 @@ export async function publishCatalog(database,readPhoto,onProgress=()=>{},expect
     for(let i=0;i<privateChunks.length;i++)await setDoc(doc(db,'editorVersions',revision,'parts',String(i)),{json:privateChunks[i]});
     for(const order of database.orders)await setDoc(doc(db,'orders',revision+'_'+order.id),{json:JSON.stringify(order),revision,updatedAt:serverTimestamp()});
     for(let i=0;i<chunks.length;i++){onProgress(`Uploading catalog ${i+1} of ${chunks.length}…`);await setDoc(doc(db,'catalogVersions',revision,'parts',String(i)),{json:chunks[i]});}
-    await runTransaction(db,async tx=>{const latest=await tx.get(current),value=latest.exists()?latest.data().revision:null;if(value!==base)throw new Error('Another editor published while you were uploading. Load from Firebase before retrying.');tx.set(current,{revision,parts:chunks.length,updatedAt:serverTimestamp()});tx.set(doc(db,'editor','current'),{revision,parts:privateChunks.length,updatedAt:serverTimestamp()});});
+    await runTransaction(db,async tx=>{const latest=await tx.get(current),value=latest.exists()?latest.data().revision:null;if(value!==base)throw new Error('Another editor published while you were uploading. Load from Firebase before retrying.');for(const item of orderKeys.filter(v=>!deleted.has(v.key))){if((await tx.get(doc(db,'orders',item.key))).exists())throw new Error('An order was deleted while publishing. Retry to keep it deleted.');}tx.set(current,{revision,parts:chunks.length,updatedAt:serverTimestamp()});tx.set(doc(db,'editor','current'),{revision,parts:privateChunks.length,updatedAt:serverTimestamp()});});
     // Retire old chunks after the new pointer is live; failed cleanup never reverses publication.
     let cleanupNeeded=false;
     if(previous.exists()){try{const {deleteDoc}=await import('firebase/firestore/lite');for(let i=0;i<previous.data().parts;i++)await deleteDoc(doc(db,'catalogVersions',base,'parts',String(i)));if(previousEditor.exists()){const old=previousEditor.data();for(let i=0;i<old.parts;i++)await deleteDoc(doc(db,'editorVersions',old.revision,'parts',String(i)));const oldOrders=await getDocs(query(collection(db,'orders'),where('revision','==',old.revision)));for(const order of oldOrders.docs)await deleteDoc(order.ref);}}catch{cleanupNeeded=true;}}
-    return {revision,products:catalog.products.length,cleanupNeeded};
+    return {revision,products:catalog.products.length,orders:database.orders.length,cleanupNeeded};
   }finally{publishing=false;}
 }
 export async function verifyPublisherEmail(){const user=publisherAuth().currentUser;if(!user)throw new Error('Sign in first.');await sendEmailVerification(user);}
@@ -72,14 +75,15 @@ export function watchStoreOrders(onOrders,onStatus) {
     clear();onOrders([]);
     if(!isOwner(user)){onStatus(user?'Verify your store email to see live orders.':'Connect Firebase to see incoming orders live.');return;}
     const db=orderDatabase(),session=generation;
-    let inquiries=[],privateOrders=[],stopPrivate=()=>{},inquiriesReady=false,privateReady=false,failed=false;
-    const emit=()=>{if(session!==generation)return;const merged=new Map(inquiries.map(o=>[`${o.week||''}:${o.number}`,o]));for(const o of privateOrders)merged.set(`${o.week||''}:${o.number}`,o);onOrders([...merged.values()]);if(inquiriesReady&&privateReady&&!failed)onStatus('Live · Incoming orders update automatically.');};
+    let inquiries=[],privateOrders=[],deletedHashes=new Set(),emission=0,stopPrivate=()=>{},inquiriesReady=false,privateReady=false,deletionsReady=false,failed=false;
+    const emit=async()=>{if(session!==generation)return;const version=++emission,merged=new Map(inquiries.map(o=>[`${o.week||''}:${o.number}`,o]));for(const o of privateOrders)merged.set(`${o.week||''}:${o.number}`,o);const rows=await Promise.all([...merged.values()].map(async o=>({order:o,hash:await orderDeletionKey(o)})));if(session!==generation||version!==emission)return;onOrders(rows.filter(r=>!deletedHashes.has(r.hash)).map(r=>r.order),new Set(deletedHashes));if(inquiriesReady&&privateReady&&deletionsReady&&!failed)onStatus('Live · Incoming orders update automatically.');};
     const error=e=>{if(session===generation){failed=true;onStatus('Live orders unavailable: '+(e.message||'Check your Firebase access.'));}};
     onStatus('Connecting to live orders…');
     stops.push(onSnapshot(liveCollection(db,'pickupRequests'),snapshot=>{
       if(session!==generation)return;
       inquiries=snapshot.docs.map(d=>{const o=decodePublicOrder(d.data());return {id:d.id,number:o.number,week:o.week||'',lookupKey:o.lookupKey||'',name:'',email:'',phone:'',notes:'Website inquiry; confirm prices and pickup with the customer.',createdAt:o.createdAt?.toDate().toISOString()||'',items:o.items};});inquiriesReady=true;emit();
     },error));
+    stops.push(onSnapshot(liveQuery(liveCollection(db,'orders'),liveWhere('revision','==','deleted-orders')),snapshot=>{if(session!==generation)return;deletedHashes=new Set(snapshot.docs.map(d=>d.id.replace(/^deleted_/,'')));deletionsReady=true;void emit();},error));
     stops.push(onSnapshot(liveDoc(db,'editor','current'),snapshot=>{
       if(session!==generation)return;
       stopPrivate();privateOrders=[];privateReady=false;
@@ -92,4 +96,26 @@ export function watchStoreOrders(onOrders,onStatus) {
     stops.push(()=>stopPrivate());
   });
   return ()=>{clear();stopAuth();};
+}
+
+// Only a hash remains: no order number, products, contact details or order snapshot.
+export const orderIdentity=order=>`${order.week||''}:${order.number}:${new Date(order.createdAt).toISOString()}`;
+export const orderDeletionKey=order=>photoKey(orderIdentity(order));
+export async function deleteStoreOrder(order){
+  if(!isOwner(publisherAuth().currentUser))throw new Error('Connect your verified store account to delete online orders.');
+  if(publishing)throw new Error('Wait for catalog publishing to finish before deleting an order.');
+  const db=catalogDatabase(),hash=await orderDeletionKey(order),saved=await getDocs(collection(db,'orders'));
+  const copies=saved.docs.filter(d=>{try{return orderIdentity(JSON.parse(d.data().json))===orderIdentity(order);}catch{return false;}});
+  if(copies.length>498)throw new Error('Too many cloud copies to delete safely in one operation.');
+  // Atomic deletion: denied public deletion keeps all private copies and the hash receipt untouched.
+  const publicRef=order.lookupKey&&/^FD-[0-9]{8}-[A-F0-9]{32}$/.test(order.lookupKey)?doc(db,'pickupRequests',order.lookupKey):null;
+  try{await runTransaction(db,async tx=>{
+    const publicCopy=publicRef?await tx.get(publicRef):null;
+    // A numeric reference can be reused after deletion. Never delete a newer inquiry with that number.
+    const sameInquiry=publicCopy?.exists()&&publicCopy.data().createdAt.toDate().toISOString()===new Date(order.createdAt).toISOString();
+    for(const d of copies)tx.delete(d.ref);
+    if(sameInquiry)tx.delete(publicRef);
+    tx.set(doc(db,'orders','deleted_'+hash),{json:'{}',revision:'deleted-orders',updatedAt:serverTimestamp()});
+  });}catch(error){if(error.code==='permission-denied')throw new Error('Order was not deleted. Publish the updated firestore.rules in Firebase Database → Rules, then try again.');throw error;}
+
 }

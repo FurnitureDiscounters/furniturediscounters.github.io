@@ -17,7 +17,7 @@ export function validateDatabase(input, { publicOnly = false } = {}) {
   unique(input.categories,'categories',300); unique(input.subcategories,'subcategories',2000); unique(input.products,'products',10000);
   const cats = new Map(input.categories.map(c => [c.id,c])), subs = new Map(input.subcategories.map(c => [c.id,c]));
   for (const c of input.categories) if (!text(c.name,100) || !c.name.trim() || !text(c.description,1000) || !/^#[0-9a-f]{6}$/i.test(c.accent) || ![2,3,4].includes(c.columns) || !Number.isInteger(c.sortOrder) || c.sortOrder < 0 || c.sortOrder > 10000 || typeof c.active !== 'boolean' || !(c.imagePath === '' || validImagePath(c.imagePath))) fail('A category has invalid fields.');
-  for (const s of input.subcategories) if (!cats.has(s.category) || !text(s.name,100) || !s.name.trim() || !text(s.description,1000) || typeof s.active !== 'boolean') fail('A subcategory needs a valid parent category and name.');
+  for (const s of input.subcategories) if (!cats.has(s.category) || !text(s.name,100) || !s.name.trim() || !text(s.description,1000) || typeof s.active !== 'boolean' || !(s.imagePath===undefined||s.imagePath===''||validImagePath(s.imagePath))) fail('A subcategory needs a valid parent category and name.');
   const skus = new Set();
   for (const p of input.products) {
     if (!text(p.name,160) || !p.name.trim() || !text(p.sku,80) || !p.sku.trim() || skus.has(p.sku.trim().toLowerCase()) || !text(p.description,5000) || !money(p.priceCents) || !(p.oldPriceCents === null || money(p.oldPriceCents)) || !Number.isInteger(p.stock) || p.stock < 0 || p.stock > 100000 || !cats.has(p.category) || !(p.subcategory === '' || subs.get(p.subcategory)?.category === p.category) || !text(p.dimensions,250) || !text(p.material,250) || !text(p.finish,250) || ['active','available','featured'].some(k => typeof p[k] !== 'boolean') || !Array.isArray(p.images) || p.images.length > 8 || !p.images.length || !p.images.every(validImagePath)) fail('A product has invalid fields, a duplicate SKU, or an invalid category/subcategory.');
@@ -38,7 +38,7 @@ export function validateDatabase(input, { publicOnly = false } = {}) {
   const pick = (v, keys) => Object.fromEntries(keys.map(k => [k,v[k]]));
   return { version:1,
     categories:input.categories.map(v => pick(v,['id','name','description','accent','columns','sortOrder','active','imagePath'])),
-    subcategories:input.subcategories.map(v => pick(v,['id','category','name','description','active'])),
+    subcategories:input.subcategories.map(v => ({...pick(v,['id','category','name','description','active']),...(v.imagePath!==undefined?{imagePath:v.imagePath}:{})})),
     products:input.products.map(v => pick(v,['id','name','sku','description','priceCents','oldPriceCents','stock','category','subcategory','dimensions','material','finish','images','active','available','featured'])),
     settings:pick(input.settings,Object.keys(limits)),
     orders:orders.map(v => ({ ...pick(v,['id','number','week','lookupKey','name','email','phone','notes','createdAt']), items:v.items.map(i => pick(i,['productId','name','sku','priceCents','quantity'])) })) };
