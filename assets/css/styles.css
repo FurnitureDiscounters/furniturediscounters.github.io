@@ -2687,3 +2687,38 @@ input::placeholder {
 .quantity-button:disabled {
   cursor: default;
 }
+
+/* Keep the FD brand, navigation and shopping bag aligned in one header row. */
+.site-header .header-inner {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.site-header .header-inner > .brand {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  min-width: 0;
+}
+.site-header .header-inner > .brand img {
+  display: block;
+  height: 55px;
+  width: auto;
+  max-width: 140px;
+  object-fit: contain;
+}
+.site-header .header-inner > .desktop-nav {
+  margin-left: auto;
+  margin-right: 0;
+}
+.site-header .header-inner > .header-actions {
+  flex: 0 0 auto;
+  margin-left: 0;
+}
+@media (max-width: 600px) {
+  .site-header .header-inner > .brand img { height: 46px; }
+  .site-header .header-inner { gap: 12px; }
+}
