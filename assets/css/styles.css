@@ -2722,3 +2722,10 @@ input::placeholder {
   .site-header .header-inner > .brand img { height: 46px; }
   .site-header .header-inner { gap: 12px; }
 }
+
+/* FD roof symbol with a matching gold geometric wordmark */
+.site-header .brand, .footer-brand .brand { display: inline-flex; align-items: center; gap: 12px; }
+.site-header .brand .brand-logo, .footer-brand .brand .brand-logo { display: block; width: 108px; max-width: none; height: auto; max-height: 58px; object-fit: contain; flex: none; }
+.site-header .brand .brand-name, .footer-brand .brand .brand-name { display: flex; flex-direction: column; gap: 3px; color: rgb(205,185,143); font-family: 'Montserrat', 'Century Gothic', 'Arial', sans-serif; font-weight: 700; font-size: 20px; line-height: 1; letter-spacing: -.035em; white-space: nowrap; }
+@media (max-width: 850px) { .site-header .brand .brand-logo { width: 78px; } .site-header .brand .brand-name { font-size: 16px; } }
+@media (max-width: 600px) { .site-header .brand .brand-logo { width: 64px; } .site-header .brand .brand-name { font-size: 13px; } }
