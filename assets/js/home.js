@@ -1,22 +1,17 @@
-import { getProducts } from "./services/product-service.js";
-import { productCard, setupProductInteractions } from "./ui.js";
-
-async function loadFeaturedProducts() {
-  const grid = document.querySelector("#featured-products");
-  if (!grid) return;
-  grid.setAttribute("aria-busy", "true");
+import { getFeaturedProducts, getCategories } from './services/product-service.js';
+import { productCard, setupProductInteractions, escapeHTML, icons } from './ui.js';
+async function loadHome() {
+  const grid = document.querySelector('#featured-products'), categoryGrid = document.querySelector('#home-categories');
+  grid.setAttribute('aria-busy', 'true');
   try {
-    const products = await getProducts();
-    const featured = products.filter((product) => product.featured);
-    const collection = featured.length ? featured : products;
-    grid.innerHTML = collection.slice(0, 4).map(productCard).join("");
+    const [products, categories] = await Promise.all([getFeaturedProducts(), getCategories()]);
+    grid.innerHTML = products.map(productCard).join('') || '<p class="inline-message">Explore our latest arrivals in the store.</p>';
+    categoryGrid.style.setProperty('--category-count', Math.min(3, Math.max(1, categories.length)));
+    categoryGrid.innerHTML = categories.map(c => `<a class="category-card" style="--category-accent:${escapeHTML(c.accent)}" href="store.html?category=${encodeURIComponent(c.id)}"><div class="category-image">${c.image ? `<img src="${escapeHTML(c.image)}" alt="${escapeHTML(c.name)}" width="500" height="600" loading="lazy">` : `<span class="category-monogram">${escapeHTML(c.name)}</span>`}</div><span>${escapeHTML(c.name)}${icons.arrow}</span></a>`).join('') || '<p class="inline-message">New collections will appear here as they arrive.</p>';
   } catch (error) {
-    grid.innerHTML =
-      '<p class="inline-message">The example collection is taking a moment. <a href="./store.html">Visit the store to try again.</a></p>';
-  } finally {
-    grid.setAttribute("aria-busy", "false");
-  }
+    grid.textContent = error.message || 'The collection could not be loaded. Please try again later.';
+    categoryGrid.innerHTML = '<a class="text-link" href="store.html">Browse the store</a>';
+  } finally { grid.setAttribute('aria-busy', 'false'); }
 }
-
 setupProductInteractions();
-void loadFeaturedProducts();
+void loadHome();

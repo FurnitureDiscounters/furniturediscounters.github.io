@@ -1,0 +1,31 @@
+# Connect the real Firebase database
+
+Use the existing `furniture-discounters` project, its `(default)` **Standard** Firestore database and the **Spark** plan. No Blaze upgrade, Cloud Functions or Firebase Storage bucket is needed.
+
+1. In Firestore Database → Rules, paste this repository's `firestore.rules` and Publish.
+2. Download the standalone editor and open it locally. Enter `furniture.discounters.offcial@gmail.com` and your chosen password. Click **Create store account** if it does not exist, or **Connect Firebase** if it already exists. Email/Password was enabled earlier.
+3. Click **Send verification email**, open the verification link, then disconnect and connect again. The new store email must be verified before cloud reading/writing is allowed. The previously supplied owner UID remains authorized too. This requires access to the email inbox.
+4. Open your existing JSON/photo backup, or add your real products. Click **Publish to Firebase**. This creates the database documents automatically.
+5. Publish the changed website files, including `assets/dist`, through GitHub Pages. It now reads Firebase, and future catalog publications do not require another website export.
+
+On another computer or after losing browser storage, connect and click **Load from Firebase**. This replaces the local catalog with the published full catalog, private orders and customer inquiries. Save a backup before replacing existing local work. Local edits are drafts until Publish to Firebase is clicked. If Firebase already has a catalog, load it before publishing; this prevents a fresh empty editor from overwriting saved inventory. To restore a different backup, first load the current cloud version, then open your backup and publish. No password or login token is included in the HTML, catalog, repository or saved environment instructions. Login tokens are kept in memory and disappear when the editor closes.
+
+Account creation could not be performed from this cloud environment because its network policy does not allow Firebase Authentication endpoints. The editor's Create store account button performs creation from your browser using the email/password you enter. No production rules deployment or GitHub Pages publication has been performed here. Authorized project owners can optionally deploy rules/index exemptions with `firebase deploy --only firestore --project furniture-discounters` after Firebase CLI owner login.
+
+## Data and access
+
+- `catalog/current` points to immutable JSON chunks under `catalogVersions/{revision}/parts`. Only the currently published snapshot is public. Hidden products, private orders and unknown/private imported fields are omitted from public JSON. Store contact information is intentionally public.
+- `editor/current` and `editorVersions/{revision}/parts` hold the complete editor catalog, including hidden products, with owner-only access.
+- `orders` contains full private records, names/contact details, item snapshots and their catalog revision. Owner reads only the current revision when restoring. Customer inquiries are merged into the editor's orders when loading.
+- `catalogPhotos` holds bounded, optimized WebP data URLs keyed by a SHA-256 hash of each image path. These are publicly retrievable by exact hash so the storefront can display product photos; collection listing and arbitrary writes are denied. Photos of hidden products can also be restored, and exact-hash access does not confer access to hidden product details or order records. Keep only product imagery here.
+- `pickupRequests` stores immutable customer inquiries with random full numbers, selected item snapshots and creation timestamps. Customers can look up one exact number but cannot list, change or delete inquiries. The authorized store can list inquiries. No customer contacts or preparation/ready status fields are public.
+
+Public catalog and photo writes require either the previously supplied owner UID or a verified token for the designated store email. Creating a different account, an unverified account or a writable role document does not grant publishing access. Chunk/photo payloads are bounded, strict document field schemas are checked, snapshots cannot be edited in place, and private collections are denied to customers. Full JSON schemas are additionally validated in the publisher and reader; rules cannot parse JSON and trust the authorized owner to publish only public catalog content.
+
+Public and private catalog pointers switch atomically after upload, and an intervening publication stops a stale editor from overwriting it. Failed uploads leave the old live catalog intact but may leave staged documents that need cleanup. Previous version chunks/orders are removed after success; a cleanup error is reported separately. Unused photos are not automatically removed.
+
+## Free limits
+
+Spark has bounded storage and daily read/write quotas (currently 1 GiB storage, 50,000 reads and 20,000 writes). A catalog is packed into chunks, avoiding 2,000 individual product reads per visit. Each visible uploaded photo adds a document read, and publisher uploads/restoration also consume quota. Images use base64, which adds about one third to their byte size. For around 2,000 products, aim for roughly 100–150 KB per photo and monitor usage, especially with multiple photos and retained/staged uploads. Quota exhaustion can interrupt service. This is not unlimited free hosting; leaving Spark selected avoids paid usage.
+
+Publish `firestore.indexes.json` to exempt large JSON/photo fields from indexes. Customer-supplied prices are estimates. Staff must confirm availability, final price, taxes and pickup. No payment, guaranteed reservation or automatic fulfillment occurs. The full order number is a bearer lookup key and should be kept private.

@@ -1,0 +1,72 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Public catalog/current and private editor/current: revision, parts, updatedAt.
+    // Version parts: bounded JSON; public snapshots exclude private records.
+    // catalogPhotos: immutable, bounded WebP data URL; orders: owner-only JSON and timestamp.
+    function owner() { return request.auth != null && (request.auth.uid == 'YHWYz24VL4hQ3vZWQv0hUBxo8Xw1' || (request.auth.token.email == 'furniture.discounters.offcial@gmail.com' && request.auth.token.email_verified == true)); }
+    function pointer(v) { return v.keys().hasAll(['revision','parts','updatedAt']) && v.keys().hasOnly(['revision','parts','updatedAt']) && v.revision.matches('^[A-Za-z0-9_-]{1,80}$') && v.parts is int && v.parts >= 1 && v.parts <= 100 && v.updatedAt == request.time; }
+    function part(v) { return v.keys().hasAll(['json']) && v.keys().hasOnly(['json']) && v.json is string && v.json.size() > 0 && v.json.size() <= 150000; }
+    function photo(v) { return v.keys().hasAll(['data']) && v.keys().hasOnly(['data']) && v.data is string && v.data.size() <= 900000 && v.data.matches('^data:image/webp;base64,[A-Za-z0-9+/=]+$'); }
+    function order(v) { return v.keys().hasAll(['json','revision','updatedAt']) && v.keys().hasOnly(['json','revision','updatedAt']) && v.revision.matches('^[A-Za-z0-9_-]{1,80}$') && v.json is string && v.json.size() > 0 && v.json.size() <= 100000 && v.updatedAt == request.time; }
+    match /catalog/current {
+      allow get: if true;
+      allow create, update: if owner() && pointer(request.resource.data);
+    }
+    match /editor/current {
+      allow get: if owner();
+      allow create, update: if owner() && pointer(request.resource.data);
+    }
+    match /catalogVersions/{revision}/parts/{id} {
+      allow get: if owner() || get(/databases/$(database)/documents/catalog/current).data.revision == revision;
+      allow create: if owner() && revision.matches('^[A-Za-z0-9_-]{1,80}$') && id.matches('^([0-9]|[1-9][0-9])$') && part(request.resource.data);
+      allow delete: if owner();
+    }
+    match /editorVersions/{revision}/parts/{id} {
+      allow get: if owner();
+      allow create: if owner() && revision.matches('^[A-Za-z0-9_-]{1,80}$') && id.matches('^([0-9]|[1-9][0-9])$') && part(request.resource.data);
+      allow delete: if owner();
+    }
+    match /catalogPhotos/{id} {
+      allow get: if id.matches('^[a-f0-9]{64}$');
+      allow create: if owner() && id.matches('^[a-f0-9]{64}$') && photo(request.resource.data);
+      allow delete: if owner();
+    }
+    match /orders/{id} {
+      allow read: if owner();
+      allow create, update: if owner() && id.matches('^[A-Za-z0-9_-]{1,161}$') && order(request.resource.data);
+      allow delete: if owner();
+    }
+    function number(id) { return id.matches('^FD-[0-9]{8}-[A-F0-9]{32}$'); }
+    function line(i) {
+      // Tab-separated ID, name, SKU and integer cents; no extra fields.
+      return i.matches('^[A-Za-z0-9_-]{1,80}\\t[^\\t\\r\\n]{1,160}\\t[^\\t\\r\\n]{1,80}\\t(0|[1-9][0-9]{0,7}|100000000)$');
+    }
+    function lines(v) {
+      let n = v.keys().size();
+      return v is map && n >= 1 && n <= 20 && v.keys().hasOnly(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19']) &&
+        line(v['0']) &&
+        (n < 2 || line(v['1'])) && (n < 3 || line(v['2'])) &&
+        (n < 4 || line(v['3'])) && (n < 5 || line(v['4'])) &&
+        (n < 6 || line(v['5'])) && (n < 7 || line(v['6'])) &&
+        (n < 8 || line(v['7'])) && (n < 9 || line(v['8'])) &&
+        (n < 10 || line(v['9'])) && (n < 11 || line(v['10'])) &&
+        (n < 12 || line(v['11'])) && (n < 13 || line(v['12'])) &&
+        (n < 14 || line(v['13'])) && (n < 15 || line(v['14'])) &&
+        (n < 16 || line(v['15'])) && (n < 17 || line(v['16'])) &&
+        (n < 18 || line(v['17'])) && (n < 19 || line(v['18'])) &&
+        (n < 20 || line(v['19']));
+    }
+    match /pickupRequests/{id} {
+      // The full, cryptographically random number is the lookup key. No listings or personal data.
+      allow get: if number(id);
+      allow create: if number(id) && request.resource.data.keys().hasAll(['number','items','createdAt']) &&
+        request.resource.data.keys().hasOnly(['number','items','createdAt']) &&
+        request.resource.data.number == id && request.resource.data.createdAt == request.time && lines(request.resource.data.items);
+      allow list: if owner();
+      allow update, delete: if false;
+    }
+    // Deny every other collection, including role documents.
+    match /{document=**} { allow read, write: if false; }
+  }
+}

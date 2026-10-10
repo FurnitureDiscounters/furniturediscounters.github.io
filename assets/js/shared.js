@@ -83,3 +83,25 @@ if (
     }
   });
 }
+
+// Business details and announcements are editable without changing HTML.
+import { getSettings, getCategories } from './services/product-service.js';
+async function updateBusinessInformation() {
+  try {
+    const settings = await getSettings();
+    for (const [key, value] of Object.entries(settings)) {
+      document.querySelectorAll(`[data-setting="${key}"]`).forEach(el => { if (typeof value === 'string' && (value || key !== 'story')) { el.textContent = value; if (el.tagName === 'A') { if (key === 'address') el.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(value)}`; if (key === 'phone') el.href = `tel:${value.replace(/[^+0-9]/g, '')}`; if (key === 'email') el.href = `mailto:${value}`; } } });
+    }
+    if (settings.announcement) document.querySelectorAll('.announcement-inner > span').forEach(el => { el.textContent = settings.announcement; });
+  } catch { /* Accurate, supplied store details remain available offline. */ }
+  try {
+    const categories = await getCategories();
+    document.querySelectorAll('[data-category-links]').forEach(el => {
+      el.replaceChildren(...categories.slice(0, 6).map(c => {
+        const a = document.createElement('a'); a.href = `store.html?category=${encodeURIComponent(c.id)}`; a.textContent = c.name; return a;
+      }));
+    });
+  } catch { /* The store link remains available. */ }
+}
+window.addEventListener('storage', refreshCartCount);
+void updateBusinessInformation();

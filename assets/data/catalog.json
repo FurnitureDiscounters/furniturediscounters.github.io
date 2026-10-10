@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "categories": [
+    {
+      "id": "living-room",
+      "name": "Living Room",
+      "description": "",
+      "accent": "#7e6049",
+      "columns": 3,
+      "sortOrder": 0,
+      "active": true,
+      "imagePath": ""
+    },
+    {
+      "id": "bedroom",
+      "name": "Bedroom",
+      "description": "",
+      "accent": "#69785f",
+      "columns": 3,
+      "sortOrder": 1,
+      "active": true,
+      "imagePath": ""
+    },
+    {
+      "id": "dining-room",
+      "name": "Dining Room",
+      "description": "",
+      "accent": "#a05c43",
+      "columns": 3,
+      "sortOrder": 2,
+      "active": true,
+      "imagePath": ""
+    },
+    {
+      "id": "office",
+      "name": "Office",
+      "description": "",
+      "accent": "#465e72",
+      "columns": 3,
+      "sortOrder": 3,
+      "active": true,
+      "imagePath": ""
+    },
+    {
+      "id": "mattresses",
+      "name": "Mattresses",
+      "description": "",
+      "accent": "#79677a",
+      "columns": 3,
+      "sortOrder": 4,
+      "active": true,
+      "imagePath": ""
+    },
+    {
+      "id": "accent-furniture",
+      "name": "Accent Furniture",
+      "description": "",
+      "accent": "#94723e",
+      "columns": 3,
+      "sortOrder": 5,
+      "active": true,
+      "imagePath": ""
+    }
+  ],
+  "subcategories": [],
+  "products": [],
+  "settings": {
+    "announcement": "Good design. Everyday value.",
+    "address": "500 N. McCarran Blvd, Sparks, NV 89431",
+    "hours": "Monday–Saturday 10AM–7PM · Sunday 10AM–6PM",
+    "phone": "(775) 823-9322",
+    "email": "Furniturediscounters@yahoo.com",
+    "pickupInstructions": "Contact us to confirm availability and pickup before visiting the store.",
+    "story": ""
+  }
+}

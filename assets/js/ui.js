@@ -1,6 +1,6 @@
-import { getProduct } from "./services/product-service.js";
+import { getProduct, categoryName, subcategoryName } from "./services/product-service.js";
 import { addToCart } from "./services/order-service.js";
-import { categories } from "./data/products.js";
+
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -67,8 +67,9 @@ export function toast(message, type = "success") {
   );
 }
 
-export function categoryName(id) {
-  return categories.find((category) => category.id === id)?.name || "Furniture";
+export function priceMarkup(product) {
+  const previous = Number.isInteger(product.oldPriceCents) && product.oldPriceCents !== product.priceCents;
+  return `<span class="price-pair">${previous ? `<del class="previous-price" aria-label="Previous price">${formatPrice(product.oldPriceCents / 100)}</del>` : ''}<strong class="current-price">${formatPrice(product.priceCents / 100)}</strong></span>`;
 }
 
 export function productCard(product) {
@@ -76,17 +77,17 @@ export function productCard(product) {
   const name = escapeHTML(product.name);
   return `<article class="product-card">
     <button class="product-image-button" type="button" data-action="details" data-product-id="${id}" aria-label="View details for ${name}">
-      <img class="product-image" src="${escapeHTML(product.image)}" alt="${name}" width="800" height="640" loading="lazy" decoding="async">
-      <span class="product-badge">Demo collection</span>
+      ${product.image ? `<img class="product-image" src="${escapeHTML(product.image)}" alt="${name}" width="800" height="640" loading="lazy" decoding="async">` : `<div class="photo-unavailable">Photograph unavailable</div>`}
+      ${product.featured ? `<span class="product-badge">Featured</span>` : ""}
     </button>
     <div class="product-info">
-      <p class="product-category">${escapeHTML(categoryName(product.category))}</p>
+      <p class="product-category">${escapeHTML(categoryName(product.category))}${product.subcategory ? ` · ${escapeHTML(subcategoryName(product.subcategory))}` : ""}</p>
       <h3 class="product-title"><button class="product-title-button" type="button" data-action="details" data-product-id="${id}">${name}</button></h3>
       <p class="product-description">${escapeHTML(product.description)}</p>
-      <div class="product-meta"><strong class="product-price">${formatPrice(product.price)}<span class="price-label"> example price</span></strong><span class="availability">${escapeHTML(product.availability)}</span></div>
+      <div class="product-meta"><span class="product-price">${priceMarkup(product)}</span><span class="availability">${escapeHTML(product.availability)}</span></div>
       <div class="product-actions">
         <button class="button button-secondary button-small" type="button" data-action="details" data-product-id="${id}" aria-label="View details for ${name}">View details</button>
-        <button class="button button-primary button-small" type="button" data-action="add" data-product-id="${id}" aria-label="Add ${name} to demo order">${icons.plus}<span>Add to order</span></button>
+        <button class="button button-primary button-small" type="button" data-action="add" data-product-id="${id}" ${product.purchasable ? "" : "disabled"} aria-label="Add ${name} to cart">${icons.plus}<span>Add to cart</span></button>
       </div>
     </div>
   </article>`;
@@ -125,7 +126,7 @@ async function openDetails(productId, trigger) {
     if (request !== detailRequest) return;
     if (!product)
       throw new Error(
-        "This example product could not be found. Please refresh the catalog.",
+        "This product could not be found. Please refresh the catalog.",
       );
     const dialog = document.querySelector("#product-dialog");
     if (!dialog)
@@ -137,11 +138,11 @@ async function openDetails(productId, trigger) {
     dialog.setAttribute("aria-describedby", "product-detail-description");
     dialog.innerHTML = `<button class="product-dialog-close icon-button" type="button" data-action="close-details" aria-label="Close product details" autofocus>${icons.x}</button>
       <div class="product-detail-grid">
-        <div class="product-detail-image"><img src="${escapeHTML(product.image)}" alt="${escapeHTML(product.name)}" width="800" height="640" decoding="async"></div>
+        <div class="product-detail-image">${product.images.map((image, i) => `<img src="${escapeHTML(image)}" alt="${escapeHTML(product.name)} — photograph ${i + 1}" width="800" height="640" decoding="async" loading="${i ? "lazy" : "eager"}">`).join("") || `<p>Photographs are currently unavailable.</p>`}</div>
         <div class="product-detail-copy">
-          <p class="eyebrow">${escapeHTML(categoryName(product.category))} · Sample product</p>
+          <p class="eyebrow">${escapeHTML(categoryName(product.category))}${product.subcategory ? ` · ${escapeHTML(subcategoryName(product.subcategory))}` : ""}</p>
           <h2 id="product-detail-title">${escapeHTML(product.name)}</h2>
-          <p class="product-detail-price">${formatPrice(product.price)}<span>Example price</span></p>
+          <p class="product-detail-price">${priceMarkup(product)}</p>
           <span class="availability">${escapeHTML(product.availability)}</span>
           <p id="product-detail-description">${escapeHTML(product.description)}</p>
           <dl class="product-detail-specs">
@@ -149,9 +150,9 @@ async function openDetails(productId, trigger) {
             <div><dt>Material</dt><dd>${escapeHTML(product.material)}</dd></div>
             <div><dt>Finish</dt><dd>${escapeHTML(product.finish)}</dd></div>
           </dl>
-          <p class="demo-note">A little inspiration for your home. This is an example product with illustrative photography, pricing, and availability.</p>
+          <p class="pickup-note">SKU: ${escapeHTML(product.sku)} · One of each per selection. Staff confirm availability and pickup. Pay in store.</p>
           <div class="product-detail-actions">
-            <button class="button button-primary" type="button" data-action="add" data-product-id="${escapeHTML(product.id)}">${icons.plus}<span>Add to order</span></button>
+            <button class="button button-primary" type="button" data-action="add" data-product-id="${escapeHTML(product.id)}" ${product.purchasable ? "" : "disabled"}>${icons.plus}<span>Add to cart</span></button>
             <button class="button button-secondary" type="button" data-action="close-details">Continue browsing</button>
           </div>
         </div>
@@ -177,13 +178,14 @@ async function addProduct(productId, button) {
   button.disabled = true;
   button.setAttribute("aria-busy", "true");
   try {
-    const product = await getProduct(productId);
-    if (!product) throw new Error("This example product could not be found.");
-    await addToCart(productId, 1);
-    toast(`${product.name} added to your demo order.`);
+    const product = await getProduct(productId,{fullPhotos:false});
+    if (!product) throw new Error("This product could not be found.");
+    if (!product.purchasable) throw new Error("This product is currently unavailable.");
+    await addToCart(productId);
+    toast(`${product.name} added to your cart.`);
   } catch (error) {
     toast(
-      error.message || "Unable to save your demo order. Please try again.",
+      error.message || "Unable to save your cart. Please try again.",
       "error",
     );
   } finally {

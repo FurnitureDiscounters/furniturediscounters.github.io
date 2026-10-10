@@ -1,0 +1,57 @@
+import { getAuth, setPersistence, inMemoryPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, connectAuthEmulator, sendEmailVerification, reload } from 'firebase/auth';
+import { getApps } from 'firebase/app';
+import { doc, getDoc, getDocs, collection, query, where, setDoc, serverTimestamp, runTransaction } from 'firebase/firestore/lite';
+import { catalogDatabase, readFirebaseCatalog, photoKey } from './firebase-catalog.js';
+import { decodePublicOrder } from './public-order-service.js';
+import { publicCatalog } from '../catalog-model.js';
+export const OWNER_UID='YHWYz24VL4hQ3vZWQv0hUBxo8Xw1';
+export const OWNER_EMAIL='furniture.discounters.offcial@gmail.com';
+export const isOwner=user=>user&&(user.uid===OWNER_UID||(user.email===OWNER_EMAIL&&user.emailVerified));
+const asciiJSON=value=>JSON.stringify(value).replace(/[\u007f-\uffff]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'));
+let auth, publishing=false;
+export function publisherAuth() {
+  if(auth)return auth;catalogDatabase();auth=getAuth(getApps().find(a=>a.name==='furniture-catalog'));
+  if(['localhost','127.0.0.1'].includes(location.hostname)&&new URLSearchParams(location.search).get('emulator')==='1')connectAuthEmulator(auth,'http://127.0.0.1:9099',{disableWarnings:true});
+  return auth;
+}
+export async function publisherLogin(email,password) {
+  const a=publisherAuth();await setPersistence(a,inMemoryPersistence);
+  const result=await signInWithEmailAndPassword(a,email,password);
+  if(result.user.uid!==OWNER_UID&&result.user.email!==OWNER_EMAIL){await signOut(a);throw new Error('This account is not the store owner account. Use the store email you provided.');}
+  return result.user;
+}
+export async function publisherCreateAccount(email,password){if(email!==OWNER_EMAIL)throw new Error('Use the store email you provided.');const a=publisherAuth();await setPersistence(a,inMemoryPersistence);return (await createUserWithEmailAndPassword(a,email,password)).user;}
+export async function publisherLogout(){if(auth)await signOut(auth);}
+async function optimizedPhoto(blob) {
+  const bitmap=await createImageBitmap(blob),canvas=document.createElement('canvas');
+  try {for(const [maximum,quality] of [[1200,.8],[1000,.65],[700,.55]]){const scale=Math.min(1,maximum/Math.max(bitmap.width,bitmap.height));canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale);canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);const encoded=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',quality));if(encoded&&encoded.type==='image/webp'&&encoded.size<=650000)return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(encoded);});}throw new Error('A photo is too large for the free Firebase setup. Use a smaller photo.');}finally{bitmap.close();}
+}
+export async function publishCatalog(database,readPhoto,onProgress=()=>{},expectedRevision=undefined) {
+  if(publishing)throw new Error('A publication is already running.');
+  if(publisherAuth().currentUser){await reload(publisherAuth().currentUser);await publisherAuth().currentUser.getIdToken(true);}
+  if(!isOwner(publisherAuth().currentUser))throw new Error('Sign in and verify your store email before publishing.');
+  publishing=true;
+  try {
+    const db=catalogDatabase(),current=doc(db,'catalog','current'),previous=await getDoc(current),previousEditor=await getDoc(doc(db,'editor','current')),base=previous.exists()?previous.data().revision:null;
+    if(base!==null&&expectedRevision===undefined)throw new Error('Firebase already contains a catalog. Load from Firebase before publishing. Back up local drafts first.');
+    if(expectedRevision!==undefined&&expectedRevision!==base)throw new Error('The online catalog changed. Load from Firebase before publishing to avoid overwriting another update.');
+    const catalog=publicCatalog(database),paths=new Set([...database.products.flatMap(p=>p.images),...database.categories.map(c=>c.imagePath).filter(Boolean)]);
+    let n=0;
+    for(const path of paths){onProgress(`Uploading photos ${++n} of ${paths.size}…`);if(!path.startsWith('assets/products/'))continue;const ref=doc(db,'catalogPhotos',await photoKey(path)),existing=await getDoc(ref);if(existing.exists())continue;const blob=await readPhoto(path);if(!blob)throw new Error(`Missing photo: ${path}. Open your photo backup before publishing.`);await setDoc(ref,{data:await optimizedPhoto(blob)});}
+    const json=asciiJSON(catalog),chunks=[];for(let i=0;i<json.length;i+=150000)chunks.push(json.slice(i,i+150000));
+    if(chunks.length>100)throw new Error('This catalog is too large to publish.');
+    const revision=crypto.randomUUID();
+    const privateJson=asciiJSON({...database,orders:[]}),privateChunks=[];for(let i=0;i<privateJson.length;i+=150000)privateChunks.push(privateJson.slice(i,i+150000));if(privateChunks.length>100)throw new Error('The private catalog is too large to publish.');
+    for(let i=0;i<privateChunks.length;i++)await setDoc(doc(db,'editorVersions',revision,'parts',String(i)),{json:privateChunks[i]});
+    for(const order of database.orders)await setDoc(doc(db,'orders',revision+'_'+order.id),{json:JSON.stringify(order),revision,updatedAt:serverTimestamp()});
+    for(let i=0;i<chunks.length;i++){onProgress(`Uploading catalog ${i+1} of ${chunks.length}…`);await setDoc(doc(db,'catalogVersions',revision,'parts',String(i)),{json:chunks[i]});}
+    await runTransaction(db,async tx=>{const latest=await tx.get(current),value=latest.exists()?latest.data().revision:null;if(value!==base)throw new Error('Another editor published while you were uploading. Load from Firebase before retrying.');tx.set(current,{revision,parts:chunks.length,updatedAt:serverTimestamp()});tx.set(doc(db,'editor','current'),{revision,parts:privateChunks.length,updatedAt:serverTimestamp()});});
+    // Retire old chunks after the new pointer is live; failed cleanup never reverses publication.
+    let cleanupNeeded=false;
+    if(previous.exists()){try{const {deleteDoc}=await import('firebase/firestore/lite');for(let i=0;i<previous.data().parts;i++)await deleteDoc(doc(db,'catalogVersions',base,'parts',String(i)));if(previousEditor.exists()){const old=previousEditor.data();for(let i=0;i<old.parts;i++)await deleteDoc(doc(db,'editorVersions',old.revision,'parts',String(i)));const oldOrders=await getDocs(query(collection(db,'orders'),where('revision','==',old.revision)));for(const order of oldOrders.docs)await deleteDoc(order.ref);}}catch{cleanupNeeded=true;}}
+    return {revision,products:catalog.products.length,cleanupNeeded};
+  }finally{publishing=false;}
+}
+export async function verifyPublisherEmail(){const user=publisherAuth().currentUser;if(!user)throw new Error('Sign in first.');await sendEmailVerification(user);}
+export async function loadEditorCatalog(){const db=catalogDatabase(),saved=await getDoc(doc(db,'editor','current'));if(!saved.exists())throw new Error('No editor database has been published to Firebase yet.');const {revision,parts}=saved.data();if(!/^[A-Za-z0-9_-]{1,80}$/.test(revision)||!Number.isInteger(parts)||parts<1||parts>100)throw new Error('Invalid cloud database metadata.');const docs=await Promise.all(Array.from({length:parts},(_,i)=>getDoc(doc(db,'editorVersions',revision,'parts',String(i)))));if(docs.some(d=>!d.exists()))throw new Error('The cloud editor database is incomplete.');const database=JSON.parse(docs.map(d=>d.data().json).join(''));const orders=await getDocs(query(collection(db,'orders'),where('revision','==',revision)));database.orders=orders.docs.map(d=>JSON.parse(d.data().json));const inquiries=await getDocs(collection(db,'pickupRequests'));const numbers=new Set(database.orders.map(o=>o.number));for(const d of inquiries.docs){const o=decodePublicOrder(d.data());if(!numbers.has(o.number))database.orders.push({id:d.id,number:o.number,name:'',email:'',phone:'',notes:'Website inquiry; confirm prices and pickup with the customer.',createdAt:o.createdAt.toDate().toISOString(),items:o.items});}return {database,revision};}
+export { readFirebaseCatalog };

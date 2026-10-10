@@ -1,0 +1,8 @@
+node_modules/
+*-debug.log
+.firebase/
+test-results/
+.env*
+*.local.json
+__pycache__/
+*.pyc

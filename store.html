@@ -7,7 +7,7 @@
     <title>Shop the Collection | Furniture Discounters</title>
     <meta
       name="description"
-      content="Browse 12 example furniture products. Search, filter by room, compare sample prices, and save your favorites to a local demo order."
+      content="Browse our furniture collection. Search, filter by room, compare prices, and request pickup at Furniture Discounters."
     />
     <meta
       property="og:title"
@@ -15,13 +15,13 @@
     />
     <meta
       property="og:description"
-      content="Browse 12 example furniture products. Search, filter by room, compare sample prices, and save your favorites to a local demo order."
+      content="Browse our furniture collection. Search, filter by room, compare prices, and request pickup at Furniture Discounters."
     />
     <meta property="og:type" content="website" />
     <link rel="icon" href="assets/favicon.svg?v=8" type="image/svg+xml" />
-    <link rel="stylesheet" href="assets/css/styles.css?v=7" />
-    <script type="module" src="assets/js/shared.js"></script>
-    <script type="module" src="assets/js/store.js"></script>
+    <link rel="stylesheet" href="assets/css/styles.css?v=9" />
+    <script type="module" src="assets/dist/shared.js"></script>
+    <script type="module" src="assets/dist/store.js"></script>
   </head>
   <body data-page="store">
     <a class="skip-link" href="#main">Skip to content</a>
@@ -29,7 +29,7 @@
       <div class="container announcement-inner">
         <span>Good design. Everyday value.</span
         ><a href="store.html"
-          >Explore our sample collection <span aria-hidden="true">↗</span></a
+          >Explore our collection <span aria-hidden="true">↗</span></a
         >
       </div>
     </div>
@@ -90,19 +90,12 @@
           </div>
           <span class="collection-seal"
             >THE HOME<br /><strong>collection</strong
-            ><span>12 SAMPLE PIECES</span></span
+            ><span>CHOSEN FOR HOME</span></span
           >
         </div>
       </section>
       <section class="container catalog-section" aria-label="Furniture catalog">
-        <div class="demo-banner">
-          <span class="demo-dot"></span>
-          <p>
-            <strong>A little inspiration, in demo mode.</strong> Products,
-            prices, photos, and availability are illustrative examples. Orders
-            are not submitted to the store.
-          </p>
-        </div>
+
         <div class="catalog-toolbar">
           <div class="search-field">
             <label class="sr-only" for="product-search">Search furniture</label
@@ -140,7 +133,7 @@
         </div>
         <div class="catalog-results-bar">
           <p id="result-count" role="status" aria-live="polite">
-            Loading sample collection…
+            Loading collection…
           </p>
           <button id="clear-filters" class="text-button" type="button">
             Reset filters
@@ -148,10 +141,7 @@
         </div>
         <div id="catalog-status" role="status"></div>
         <div id="product-grid" class="product-grid"></div>
-        <p class="collection-note">
-          Imagery is for inspiration. Sample specifications and prices do not
-          represent an offer for sale.
-        </p>
+        <p class="collection-note">Choose your favorites, then contact us to confirm pickup. Pay in store.</p>
       </section>
       <section class="container shop-bottom">
         <span class="eyebrow">A room that feels right</span>
@@ -174,26 +164,19 @@
         <div class="footer-brand">
           <a class="brand" href="index.html" aria-label="Furniture Discounters home"><img src="assets/favicon.svg?v=8" alt="" class="brand-logo" /><span class="brand-name">Furniture<span>Discounters</span></span></a>
           <p>Thoughtfully chosen furniture.<br />More room for what matters.</p>
-          <span class="footer-label">A demonstration storefront</span>
+          <span class="footer-label">Pickup inquiries · Pay in store</span>
         </div>
         <div>
           <h2>Explore</h2>
           <a href="index.html">Home</a><a href="store.html">Shop furniture</a
           ><a href="about.html">About us</a
-          ><a href="order.html">My demo order</a>
+          ><a href="order.html">My Order</a>
         </div>
         <div>
-          <h2>Find your room</h2>
-          <a href="store.html?category=sofas">Sofas &amp; sectionals</a
-          ><a href="store.html?category=beds">Beds &amp; mattresses</a
-          ><a href="store.html?category=dining">Dining room</a
-          ><a href="store.html?category=office">Home office</a>
-        </div>
+          <h2>Find your room</h2><div data-category-links><a href="store.html">All furniture</a></div></div>
         <div class="footer-contact">
           <h2>Let’s make it home</h2>
-          <p>
-            Store address, opening hours, phone,<br />and email to be added.
-          </p>
+          <p data-setting="address">500 N. McCarran Blvd, Sparks, NV 89431</p>
           <a href="about.html#contact" class="text-link"
             >Store &amp; contact information
             <svg
@@ -205,13 +188,12 @@
             >
               <path d="M4 12h16M14 6l6 6-6 6" /></svg
           ></a>
-          <p class="small">Business information is an editable placeholder.</p>
+          <p class="small" data-setting="hours">Monday–Saturday 10AM–7PM · Sunday 10AM–6PM</p>
         </div>
       </div>
       <div class="container footer-bottom">
         <span>© <span data-year>2026</span> Furniture Discounters</span
-        ><span>Sample products &amp; prices. No real orders or payments.</span
-        ><a href="order.html#demo-info">About demo mode</a>
+        ><span>Confirm pickup with us. Pay in store.</span>
       </div>
     </footer>
     <div
@@ -224,8 +206,7 @@
     <dialog id="product-dialog" aria-label="Product details"></dialog>
     <noscript
       ><p class="noscript-notice">
-        Enable JavaScript to browse sample products and use the local demo order
-        experience.
+        Enable JavaScript to browse products and arrange pickup with the store.
       </p></noscript
     >
   </body>

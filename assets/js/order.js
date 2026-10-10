@@ -1,270 +1,99 @@
-import { getProducts } from "./services/product-service.js";
-import {
-  getCart,
-  updateQuantity,
-  removeFromCart,
-  resetCart,
-  createOrder,
-  getOrder,
-  getOrders,
-} from "./services/order-service.js";
-import { toast, formatPrice, escapeHTML } from "./ui.js";
-
-const $ = (selector) => document.querySelector(selector);
-const cartItems = $("#cart-items");
-const feedback = $("#order-feedback");
-const createButton = $("#create-order");
-let catalog = new Map();
-let cart = [];
-let submitting = false;
-let renderSequence = 0;
-let confirmedNumber = "";
-
-function showError(error) {
-  feedback.textContent =
-    error.message || "We could not update your demo order. Please try again.";
-  if (error.code === "CORRUPT_CART") {
-    const reset = document.createElement("button");
-    reset.type = "button";
-    reset.className = "text-button";
-    reset.textContent = "Reset selected items";
-    reset.addEventListener("click", async () => {
-      try {
-        await resetCart();
-        feedback.textContent = "";
-        toast("Your selection has been reset. Saved orders were kept.");
-      } catch (failure) {
-        showError(failure);
-      }
-    });
-    feedback.append(reset);
-  }
-}
-
+import { getProduct, getSettings } from './services/product-service.js';
+import { getCart, removeFromCart, resetCart } from './services/order-service.js';
+import { newOrderNumber, submitPublicOrder, findPublicOrder, NUMBER_PATTERN } from './services/public-order-service.js';
+import { toast, formatPrice, priceMarkup, escapeHTML as e } from './ui.js';
+const $ = s => document.querySelector(s);
+let catalog = new Map(), requestText = '', revision = 0, selectedProducts = [], creating = false;
+function storedRequest() { try { return JSON.parse(localStorage.getItem('fd.inquiry.v1') || 'null'); } catch { return null; } }
+function signature(products) { return products.map(p => p.id).sort().join(','); }
+let contact = { email: 'Furniturediscounters@yahoo.com', phone: '(775) 823-9322' };
 async function renderCart() {
-  const sequence = ++renderSequence;
+  const seq = ++revision;
+  selectedProducts = []; $('#submit-inquiry').disabled = true;
+  $('#email-selection').hidden = true; $('#copy-selection').disabled = true;
+  $('#order-feedback').textContent = '';
   try {
     const items = await getCart();
-    if (sequence !== renderSequence) return;
-    cart = items;
-    $("#cart-content").hidden = !cart.length;
-    $("#cart-empty").hidden = Boolean(cart.length) || Boolean(confirmedNumber);
-    let totalCents = 0;
-    cartItems.innerHTML = cart
-      .map((item) => {
-        const product = catalog.get(item.productId);
-        if (!product) return "";
-        const lineTotal = Math.round(product.price * 100) * item.quantity;
-        totalCents += lineTotal;
-        const id = escapeHTML(product.id),
-          name = escapeHTML(product.name);
-        return `<article class="cart-item" data-product-id="${id}">
-        <img class="cart-item-image" src="${escapeHTML(product.image)}" alt="${name}" width="115" height="125">
-        <div class="cart-item-info"><h3>${name}</h3><p>${formatPrice(product.price)} each · Sample product</p>
-          <div class="quantity-control"><button class="quantity-button" type="button" data-change="-1" aria-label="Decrease quantity of ${name}" ${item.quantity === 1 ? "disabled" : ""}>−</button><label class="sr-only" for="qty-${id}">Quantity of ${name}</label><input id="qty-${id}" type="number" inputmode="numeric" min="1" max="99" step="1" value="${item.quantity}" data-quantity><button class="quantity-button" type="button" data-change="1" aria-label="Increase quantity of ${name}" ${item.quantity === 99 ? "disabled" : ""}>+</button></div>
-        </div><div class="cart-item-price">${formatPrice(lineTotal / 100)}<button class="remove-item" type="button" data-remove aria-label="Remove ${name} from order">Remove</button></div>
-      </article>`;
-      })
-      .join("");
-    $("#cart-subtotal").textContent = formatPrice(totalCents / 100);
-    $("#cart-total").textContent = formatPrice(totalCents / 100);
-    createButton.disabled = !cart.length || submitting;
+    let fetchError = '';
+    const products = await Promise.all(items.map(async ({ productId }) => {
+      try {
+        if (!catalog.has(productId)) catalog.set(productId, await getProduct(productId,{fullPhotos:false}));
+        return catalog.get(productId);
+      } catch (error) { fetchError = error.message; return null; }
+    }));
+    if (seq !== revision) return;
+    $('#cart-content').hidden = !items.length; $('#cart-empty').hidden = !!items.length;
+    let total = 0, unavailable = false;
+    $('#cart-items').innerHTML = items.map(({ productId }, n) => {
+      const p = products[n]; if (!p?.purchasable) unavailable = true;
+      if (p) total += p.priceCents;
+      return `<article class="cart-item">${p?.image ? `<img class="cart-item-image" src="${e(p.image)}" alt="${e(p.name)}" width="115" height="125">` : '<div class="cart-item-image"></div>'}<div class="cart-item-info"><h3>${e(p?.name || 'Unavailable product')}</h3><p>Quantity: 1 · ${e(p?.availability || (fetchError ? 'Refresh to load product details' : 'No longer listed'))}</p><button class="text-button" data-remove="${e(productId)}" type="button">Remove</button></div><strong class="cart-item-price">${p ? priceMarkup(p) : '—'}</strong></article>`;
+    }).join('');
+    $('#cart-total').textContent = $('#cart-subtotal').textContent = formatPrice(total / 100);
+    if (unavailable) { $('#order-feedback').textContent = fetchError || 'Remove unavailable products before preparing your pickup inquiry.'; return; }
+    selectedProducts = products;
+    $('#submit-inquiry').disabled = creating || !products.length;
+    const receipt = storedRequest();
+    const number = receipt?.confirmed && receipt.signature === signature(products) && NUMBER_PATTERN.test(receipt.number) ? receipt.number : '';
+    requestText = 'Hello Furniture Discounters,\nPlease confirm availability and pickup for these pieces:\n\n' + products.map(p => `1 × ${p.name} (SKU ${p.sku}) — ${formatPrice(p.price)}`).join('\n') + `\n\nEstimated merchandise total: ${formatPrice(total / 100)}.\nPlease confirm prices, taxes and pickup arrangements.\n\nMy name and phone number: `;
+    if(number) requestText += `\n\nOrder number: ${number}`;
+    if (items.length) {
+      $('#email-selection').href = `mailto:${contact.email}?subject=${encodeURIComponent(number ? `Furniture pickup inquiry — ${number}` : 'Furniture pickup inquiry')}&body=${encodeURIComponent(requestText)}`;
+      $('#email-selection').hidden = !contact.email; $('#copy-selection').disabled = false;
+    }
   } catch (error) {
-    $("#cart-content").hidden = true;
-    $("#cart-empty").hidden = true;
-    showError(error);
+    if (seq !== revision) return;
+    $('#order-feedback').textContent = error.message || 'Your selection could not be loaded. Please try again.';
+    $('#cart-content').hidden = false;
   }
 }
+$('#cart-items').addEventListener('click', async event => {
+  const button = event.target.closest('[data-remove]'); if (!button) return;
+  try { await removeFromCart(button.dataset.remove); } catch (error) { $('#order-feedback').textContent = error.message; }
+});
+$('#reset-cart').addEventListener('click', async () => {
+  try { await resetCart(); } catch (error) { $('#order-feedback').textContent = error.message; }
+});
+$('#retry-selection').addEventListener('click', () => { catalog.clear(); void renderCart(); });
+$('#copy-selection').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(requestText); toast('Selection copied. Send it to the store to ask about pickup.'); }
+  catch { $('#selection-text').value = requestText; $('#selection-text').hidden = false; $('#selection-text').focus(); $('#selection-text').select(); }
+});
+window.addEventListener('cart-updated', () => void renderCart());
+window.addEventListener('storage', () => void renderCart());
+function updateContact() {
+  $('#pickup-phone').href = `tel:${contact.phone.replace(/[^+0-9]/g, '')}`;
+  $('#pickup-phone').textContent = contact.phone;
+  $('#pickup-email').href = `mailto:${contact.email}`; $('#pickup-email').textContent = contact.email;
+}
+updateContact();
+void renderCart();
+Promise.resolve().then(() => getSettings()).then(settings => { contact = { ...contact, ...settings }; updateContact(); void renderCart(); }).catch(() => {});
 
-async function changeItem(id, quantity, remove = false, focusSelector = null) {
-  feedback.textContent = "";
+function publicOrderMarkup(order) {
+  return `<h3>${e(order.number)}</h3><ul class="order-lines">${order.items.map(i => `<li><span>${e(i.name)}<br><small>SKU ${e(i.sku)} · Quantity ${i.quantity}</small></span><strong>${formatPrice(i.priceCents*i.quantity/100)}</strong></li>`).join('')}</ul><p>Recorded merchandise estimate: ${formatPrice(order.items.reduce((sum,i)=>sum+i.priceCents*i.quantity,0)/100)}. Contact the store to confirm final prices, taxes and pickup.</p>`;
+}
+$('#submit-inquiry').addEventListener('click', async () => {
+  if(creating || !selectedProducts.length) return;
+  creating=true;$('#submit-inquiry').disabled=true;$('#order-feedback').textContent='';
+  const products=[...selectedProducts];
   try {
-    if (
-      !remove &&
-      (!Number.isInteger(quantity) || quantity < 1 || quantity > 99)
-    ) {
-      throw new Error(
-        "Choose a whole-number quantity between 1 and 99. Use Remove to delete a piece.",
-      );
-    }
-    if (remove) await removeFromCart(id);
-    else await updateQuantity(id, quantity);
+    const previous=storedRequest(), key=signature(products);
+    const number=previous?.signature===key && NUMBER_PATTERN.test(previous.number) ? previous.number : newOrderNumber();
+    // Save the same number before sending so retries cannot create another number after a lost response.
+    localStorage.setItem('fd.inquiry.v1',JSON.stringify({signature:key,number,confirmed:false}));
+    await submitPublicOrder(number,products);
+    localStorage.setItem('fd.inquiry.v1',JSON.stringify({signature:key,number,confirmed:true}));
+    $('#created-order-number').textContent=number;$('#inquiry-confirmation').hidden=false;$('#inquiry-confirmation').focus();$('#public-order-number').value=number;
     await renderCart();
-    if (remove) {
-      toast("Item removed from your demo order.");
-      (
-        cartItems.querySelector("button:not([disabled])") || $("#cart-empty a")
-      )?.focus({ preventScroll: true });
-    } else if (focusSelector) {
-      document.querySelector(focusSelector)?.focus({ preventScroll: true });
-    }
-  } catch (error) {
-    showError(error);
-    await renderCart();
-  }
-}
-
-cartItems.addEventListener("click", (event) => {
-  const button = event.target.closest("button");
-  const row = button?.closest("[data-product-id]");
-  if (!row || submitting) return;
-  const id = row.dataset.productId;
-  const current = cart.find((item) => item.productId === id);
-  if (!current) return;
-  if (button.hasAttribute("data-remove")) void changeItem(id, 0, true);
-  else if (button.dataset.change)
-    void changeItem(
-      id,
-      current.quantity + Number(button.dataset.change),
-      false,
-      `[data-product-id="${CSS.escape(id)}"] [data-change="${button.dataset.change}"]`,
-    );
+  } catch(error) { $('#order-feedback').textContent=error.code==='permission-denied' ? 'Order numbers are not enabled yet. Contact the store or try again after the updated rules are published.' : error.message || 'Your inquiry could not be recorded. Retry to keep the same number.'; }
+  finally { creating=false;$('#submit-inquiry').disabled=!selectedProducts.length; }
 });
-cartItems.addEventListener("change", (event) => {
-  if (!event.target.matches("[data-quantity]") || submitting) return;
-  const id = event.target.closest("[data-product-id]").dataset.productId;
-  void changeItem(
-    id,
-    event.target.valueAsNumber,
-    false,
-    `#qty-${CSS.escape(id)}`,
-  );
+$('#copy-created-number').addEventListener('click', async () => { try { await navigator.clipboard.writeText($('#created-order-number').textContent);toast('Order number copied.'); } catch { toast('Select and copy the order number shown above.','error'); } });
+$('#public-order-lookup').addEventListener('submit', async event => {
+  event.preventDefault();const button=event.currentTarget.querySelector('button');button.disabled=true;$('#lookup-feedback').textContent='';$('#public-order-result').replaceChildren();
+  try {const order=await findPublicOrder($('#public-order-number').value);if(!order)$('#lookup-feedback').textContent='No order matches that number. Check the full number and try again.';else $('#public-order-result').innerHTML=publicOrderMarkup(order);}
+  catch(error){$('#lookup-feedback').textContent=error.code==='permission-denied'?'Online lookup is not enabled yet. Contact the store with your number.':error.message||'Order lookup is temporarily unavailable.';}
+  finally{button.disabled=false;}
 });
-
-createButton.addEventListener("click", async () => {
-  if (submitting) return;
-  submitting = true;
-  createButton.disabled = true;
-  createButton.setAttribute("aria-busy", "true");
-  feedback.textContent = "";
-  try {
-    const order = await createOrder();
-    confirmedNumber = order.number;
-    $("#confirmation-number").textContent = order.number;
-    const count = order.items.reduce((sum, item) => sum + item.quantity, 0);
-    $("#confirmation-summary").textContent =
-      `${count} sample ${count === 1 ? "piece" : "pieces"} · Estimated total ${formatPrice(order.total)} · Simulated status: received`;
-    $("#order-confirmation").hidden = false;
-    $("#lookup-number").value = order.number;
-    if (order.warning) feedback.textContent = order.warning;
-    await renderCart();
-    $("#order-confirmation").focus({ preventScroll: true });
-    $("#order-confirmation").scrollIntoView({
-      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "instant"
-        : "smooth",
-      block: "center",
-    });
-    await renderRecentOrders();
-  } catch (error) {
-    showError(error);
-  } finally {
-    submitting = false;
-    createButton.removeAttribute("aria-busy");
-    createButton.disabled = !cart.length;
-  }
-});
-
-$("#copy-order-number").addEventListener("click", async () => {
-  try {
-    if (!navigator.clipboard?.writeText)
-      throw new Error("Clipboard unavailable");
-    await navigator.clipboard.writeText(confirmedNumber);
-    toast("Demo order number copied.");
-  } catch {
-    const range = document.createRange();
-    range.selectNodeContents($("#confirmation-number"));
-    const selection = window.getSelection();
-    selection.removeAllRanges();
-    selection.addRange(range);
-    toast(
-      "Order number selected. Press Ctrl+C (or Command+C) to copy, or touch and hold it.",
-      "error",
-    );
-  }
-});
-
-// This built-in example is intentionally separate from browser-created orders.
-// It is a static tutorial fixture; it does not imply cross-device order storage.
-const EXAMPLE = {
-  number: "FD-2026-001234",
-  total: 1048,
-  status: "received",
-  example: true,
-  items: [
-    { name: "Haven Upholstered Sofa", quantity: 1 },
-    { name: "Terra Round Coffee Table", quantity: 1 },
-  ],
-};
-
-async function lookup(number) {
-  const result = $("#lookup-result");
-  $("#lookup-feedback").textContent = "";
-  result.innerHTML = "";
-  const button = $("#lookup-form button");
-  button.disabled = true;
-  try {
-    const normalized = number.trim().toUpperCase();
-    const order =
-      (await getOrder(normalized)) ||
-      (normalized === EXAMPLE.number ? EXAMPLE : null);
-    if (!order)
-      throw new Error(
-        "No demo order with that number was found in this browser. Check the number and use the same browser and device where you created it.",
-      );
-    result.innerHTML = `<section class="lookup-status"><span class="availability">Simulated status · Received</span><h3>${escapeHTML(order.number)}</h3><p>${order.example ? "Built-in example only. This order was not created or submitted by you." : `Saved ${new Date(order.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} in this browser. Nothing was sent to the store.`}</p><ol class="status-steps" aria-label="Simulated order progress"><li class="is-current" aria-current="step">Demo received</li><li>Preparing (example)</li><li>Ready (example)</li></ol><ul class="lookup-items">${order.items.map((item) => `<li>${escapeHTML(item.name)} × ${item.quantity}</li>`).join("")}</ul><p><strong>Example total: ${formatPrice(order.total)}</strong></p><p class="small">Status is simulated and will not trigger fulfillment, delivery, or payment.</p></section>`;
-  } catch (error) {
-    $("#lookup-feedback").textContent = error.message;
-  } finally {
-    button.disabled = false;
-  }
-}
-$("#lookup-form").addEventListener("submit", (event) => {
-  event.preventDefault();
-  void lookup($("#lookup-number").value);
-});
-
-async function renderRecentOrders() {
-  try {
-    const orders = (await getOrders()).slice(-3).reverse();
-    let recent = $("#recent-orders");
-    if (!orders.length) {
-      recent?.remove();
-      return;
-    }
-    if (!recent) {
-      recent = document.createElement("div");
-      recent.id = "recent-orders";
-      recent.className = "recent-orders";
-      $("#lookup-form").after(recent);
-    }
-    recent.innerHTML = `<p class="small">Recently saved in this browser</p>${orders.map((order) => `<button class="text-button" type="button" data-order-number="${escapeHTML(order.number)}">${escapeHTML(order.number)}</button>`).join("")}`;
-    recent.onclick = (event) => {
-      const number = event.target.closest("[data-order-number]")?.dataset
-        .orderNumber;
-      if (number) {
-        $("#lookup-number").value = number;
-        void lookup(number);
-      }
-    };
-  } catch {
-    /* Explicit lookup surfaces any storage error; keep the cart usable. */
-  }
-}
-
-window.addEventListener("cart-updated", () => {
-  void renderCart();
-});
-window.addEventListener("storage", (event) => {
-  if (event.key === "fd.demo.orders.v1" || event.key === null)
-    void renderRecentOrders();
-});
-try {
-  catalog = new Map(
-    (await getProducts()).map((product) => [product.id, product]),
-  );
-  await renderCart();
-  await renderRecentOrders();
-} catch (error) {
-  showError(error);
-}
+const previous=storedRequest();if(previous?.number)$('#public-order-number').value=previous.number;

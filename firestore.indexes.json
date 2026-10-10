@@ -1,0 +1,25 @@
+{
+  "indexes": [],
+  "fieldOverrides": [
+    {
+      "collectionGroup": "pickupRequests",
+      "fieldPath": "items",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "parts",
+      "fieldPath": "json",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "catalogPhotos",
+      "fieldPath": "data",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "orders",
+      "fieldPath": "json",
+      "indexes": []
+    }
+  ]
+}

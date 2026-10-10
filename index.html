@@ -7,7 +7,7 @@
     <title>Beautiful Furniture. Better Prices. | Furniture Discounters</title>
     <meta
       name="description"
-      content="Explore a thoughtfully curated sample furniture collection with warm style, comfortable prices, and a simple demonstration ordering experience."
+      content="Explore furniture for every room. Request your favorites for pickup and pay in store at Furniture Discounters."
     />
     <meta
       property="og:title"
@@ -15,19 +15,19 @@
     />
     <meta
       property="og:description"
-      content="Explore a thoughtfully curated sample furniture collection with warm style, comfortable prices, and a simple demonstration ordering experience."
+      content="Explore furniture for every room. Request your favorites for pickup and pay in store at Furniture Discounters."
     />
     <meta property="og:type" content="website" />
     <link rel="icon" href="assets/favicon.svg?v=8" type="image/svg+xml" />
-    <link rel="stylesheet" href="assets/css/styles.css?v=7" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=9" />
     <link
       rel="preload"
       as="image"
       href="assets/images/hero.webp"
       fetchpriority="high"
     />
-    <script type="module" src="assets/js/shared.js"></script>
-    <script type="module" src="assets/js/home.js"></script>
+    <script type="module" src="assets/dist/shared.js"></script>
+    <script type="module" src="assets/dist/home.js"></script>
   </head>
   <body data-page="home">
     <a class="skip-link" href="#main">Skip to content</a>
@@ -35,7 +35,7 @@
       <div class="container announcement-inner">
         <span>Good design. Everyday value.</span
         ><a href="store.html"
-          >Explore our sample collection <span aria-hidden="true">↗</span></a
+          >Explore our collection <span aria-hidden="true">↗</span></a
         >
       </div>
     </div>
@@ -132,7 +132,7 @@
             <span>The art of feeling at home</span
             ><span>01 / THE LIVING EDIT</span>
           </div>
-          <span class="image-note">Style inspiration · sample collection</span>
+          <span class="image-note">Style inspiration</span>
         </div>
       </section>
       <div class="value-strip">
@@ -164,123 +164,7 @@
               <path d="M4 12h16M14 6l6 6-6 6" /></svg
           ></a>
         </div>
-        <div class="category-grid">
-          <a class="category-card" href="store.html?category=sofas"
-            ><div class="category-image">
-              <img
-                src="assets/images/sofa.webp"
-                alt="Sofas &amp; sectionals"
-                width="500"
-                height="600"
-                loading="lazy"
-              />
-            </div>
-            <span
-              >Sofas &amp; sectionals<svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                aria-hidden="true"
-              >
-                <path d="M4 12h16M14 6l6 6-6 6" /></svg></span></a
-          ><a class="category-card" href="store.html?category=beds"
-            ><div class="category-image">
-              <img
-                src="assets/images/bed.webp"
-                alt="Beds &amp; mattresses"
-                width="500"
-                height="600"
-                loading="lazy"
-              />
-            </div>
-            <span
-              >Beds &amp; mattresses<svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                aria-hidden="true"
-              >
-                <path d="M4 12h16M14 6l6 6-6 6" /></svg></span></a
-          ><a class="category-card" href="store.html?category=dining"
-            ><div class="category-image">
-              <img
-                src="assets/images/dining.webp"
-                alt="Dining tables &amp; chairs"
-                width="500"
-                height="600"
-                loading="lazy"
-              />
-            </div>
-            <span
-              >Dining tables &amp; chairs<svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                aria-hidden="true"
-              >
-                <path d="M4 12h16M14 6l6 6-6 6" /></svg></span></a
-          ><a class="category-card" href="store.html?category=storage"
-            ><div class="category-image">
-              <img
-                src="assets/images/dresser.webp"
-                alt="Dressers &amp; storage"
-                width="500"
-                height="600"
-                loading="lazy"
-              />
-            </div>
-            <span
-              >Dressers &amp; storage<svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                aria-hidden="true"
-              >
-                <path d="M4 12h16M14 6l6 6-6 6" /></svg></span></a
-          ><a class="category-card" href="store.html?category=office"
-            ><div class="category-image">
-              <img
-                src="assets/images/desk.webp"
-                alt="Home office"
-                width="500"
-                height="600"
-                loading="lazy"
-              />
-            </div>
-            <span
-              >Home office<svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                aria-hidden="true"
-              >
-                <path d="M4 12h16M14 6l6 6-6 6" /></svg></span></a
-          ><a class="category-card" href="store.html?category=living"
-            ><div class="category-image">
-              <img
-                src="assets/images/armchair.webp"
-                alt="Living room"
-                width="500"
-                height="600"
-                loading="lazy"
-              />
-            </div>
-            <span
-              >Living room<svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                aria-hidden="true"
-              >
-                <path d="M4 12h16M14 6l6 6-6 6" /></svg></span
-          ></a>
-        </div>
+        <div id="home-categories" class="category-grid" aria-live="polite"><p>Loading collections…</p></div>
       </section>
       <section class="section featured-section">
         <div class="container reveal">
@@ -304,14 +188,11 @@
           <div
             id="featured-products"
             class="product-grid featured-grid"
-            aria-label="Featured sample products"
+            aria-label="Featured products"
           >
             <p class="loading-state">Finding your next favorite…</p>
           </div>
-          <p class="collection-note">
-            An example collection to inspire you. All products, prices, and
-            availability are for demonstration.
-          </p>
+          <p class="collection-note">Choose your favorites, then contact us to confirm pickup. Pay in store.</p>
         </div>
       </section>
       <section class="section container story-section reveal">
@@ -348,7 +229,7 @@
             <div>
               <h3>More possibility for your budget</h3>
               <p>
-                Explore approachable sample prices across the rooms you use
+                Explore approachable prices across the rooms you use
                 every day.
               </p>
             </div>
@@ -358,7 +239,7 @@
             <div>
               <h3>A simpler way to explore</h3>
               <p>
-                Find your favorites, compare the details, and build a demo order
+                Find your favorites, compare the details, and build your order
                 at your own pace.
               </p>
             </div>
@@ -385,7 +266,7 @@
               A favorite corner. A fresh perspective. Find a piece that makes
               your space feel a little more you.
             </p>
-            <a class="button button-light" href="store.html?category=living"
+            <a class="button button-light" href="store.html"
               >Explore living room
               <svg
                 viewBox="0 0 24 24"
@@ -414,20 +295,13 @@
         <div class="footer-brand">
           <a class="brand" href="index.html" aria-label="Furniture Discounters home"><img src="assets/favicon.svg?v=8" alt="" class="brand-logo" /><span class="brand-name">Furniture<span>Discounters</span></span></a><a href="store.html">Shop furniture</a
           ><a href="about.html">About us</a
-          ><a href="order.html">My demo order</a>
+          ><a href="order.html">My Order</a>
         </div>
         <div>
-          <h2>Find your room</h2>
-          <a href="store.html?category=sofas">Sofas &amp; sectionals</a
-          ><a href="store.html?category=beds">Beds &amp; mattresses</a
-          ><a href="store.html?category=dining">Dining room</a
-          ><a href="store.html?category=office">Home office</a>
-        </div>
+          <h2>Find your room</h2><div data-category-links><a href="store.html">All furniture</a></div></div>
         <div class="footer-contact">
           <h2>Let’s make it home</h2>
-          <p>
-            Store address, opening hours, phone,<br />and email to be added.
-          </p>
+          <p data-setting="address">500 N. McCarran Blvd, Sparks, NV 89431</p>
           <a href="about.html#contact" class="text-link"
             >Store &amp; contact information
             <svg
@@ -439,13 +313,12 @@
             >
               <path d="M4 12h16M14 6l6 6-6 6" /></svg
           ></a>
-          <p class="small">Business information is an editable placeholder.</p>
+          <p class="small" data-setting="hours">Monday–Saturday 10AM–7PM · Sunday 10AM–6PM</p>
         </div>
       </div>
       <div class="container footer-bottom">
         <span>© <span data-year>2026</span> Furniture Discounters</span
-        ><span>Sample products &amp; prices. No real orders or payments.</span
-        ><a href="order.html#demo-info">About demo mode</a>
+        ><span>Confirm pickup with us. Pay in store.</span>
       </div>
     </footer>
     <div
@@ -458,8 +331,7 @@
     <dialog id="product-dialog" aria-label="Product details"></dialog>
     <noscript
       ><p class="noscript-notice">
-        Enable JavaScript to browse sample products and use the local demo order
-        experience.
+        Enable JavaScript to browse products and arrange pickup with the store.
       </p></noscript
     >
   </body>

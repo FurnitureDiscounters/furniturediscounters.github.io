@@ -1,10 +1,10 @@
 # Photography and fonts
 
-Images are illustrative lifestyle/product examples, not photographs of verified Furniture Discounters stock. The files are downloaded, resized, and WebP-encoded locally; visitors do not make requests to the photo or font providers. Some categories reuse a room image with a different crop. Original source files are linked below for traceability.
+Retained local images are editorial lifestyle photography, not photographs of verified Furniture Discounters stock. The files are downloaded, resized, and WebP-encoded locally; visitors do not make requests to the photo or font providers. Real product photographs are uploaded in the local editor and published as optimized WebP data in Firestore; local backups and static exports also include assets/products files. Original source files are linked below for traceability.
 
 ## Photography
 
-Photography was sourced from Unsplash. See the [Unsplash license](https://unsplash.com/license). Replace these editorial examples with licensed photography of the actual store inventory before offering real products for sale. No photographer or depicted brand is represented as endorsing Furniture Discounters.
+Photography was sourced from Unsplash. See the [Unsplash license](https://unsplash.com/license). Use licensed photography of actual inventory in all catalog product records; editorial photographs are retained for homepage and About styling. No photographer or depicted brand is represented as endorsing Furniture Discounters.
 
 | Local file | Source |
 | --- | --- |

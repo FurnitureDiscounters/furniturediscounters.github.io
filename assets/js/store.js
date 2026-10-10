@@ -1,124 +1,81 @@
-import { getProducts } from "./services/product-service.js";
-import { categories } from "./data/products.js";
-import {
-  productCard,
-  setupProductInteractions,
-  escapeHTML,
-  categoryName,
-  icons,
-} from "./ui.js";
-
-const grid = document.querySelector("#product-grid");
-const search = document.querySelector("#product-search");
-const category = document.querySelector("#category-filter");
-const sort = document.querySelector("#sort-products");
-const count = document.querySelector("#result-count");
-const clearButton = document.querySelector("#clear-filters");
-const status = document.querySelector("#catalog-status");
-const sortValues = new Set(["featured", "price-asc", "price-desc", "name"]);
-let products = [];
-
-function normalize(value) {
-  return String(value)
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
+import { getProductPage, getCategories, getSubcategories } from './services/product-service.js';
+import { productCard, setupProductInteractions, escapeHTML as e } from './ui.js';
+const $ = s => document.querySelector(s);
+const grid = $('#product-grid'), search = $('#product-search'), category = $('#category-filter'), sort = $('#sort-products');
+const status = $('#catalog-status'), count = $('#result-count'), clear = $('#clear-filters');
+let subcategories = [];
+const subnav = document.createElement('nav'); subnav.className = 'category-chips'; subnav.setAttribute('aria-label', 'Subcategories'); grid.before(subnav);
+let selectedSubcategory = new URLSearchParams(location.search).get('subcategory') || 'all';
+let categories = [], pages = [], pageIndex = 0, generation = 0, debounce;
+const pagination = document.createElement('div'); pagination.className = 'catalog-pagination';
+pagination.innerHTML = '<button id="previous-page" class="button button-secondary" type="button">Previous</button><span id="page-number" aria-live="polite"></span><button id="next-page" class="button button-secondary" type="button">Next</button>';
+grid.after(pagination);
+function filters() { return { category: category.value || 'all', search: search.value, sort: sort.value, subcategory: selectedSubcategory }; }
+function render() {
+  const page = pages[pageIndex];
+  grid.innerHTML = page.products.length ? page.products.map(productCard).join('') : '<div class="catalog-empty"><h2>No furniture found.</h2><p>Try another category or a product name, SKU or material.</p></div>';
+  count.textContent = `${page.products.length} pieces on this page`;
+  $('#previous-page').disabled = pageIndex === 0;
+  $('#next-page').disabled = !page.hasMore;
+  $('#page-number').textContent = `Page ${pageIndex + 1}`;
+  pagination.hidden = pages.length === 1 && !page.hasMore;
 }
+async function load(reset = true) {
+  const seq = ++generation;
+  if (reset) { pages = []; pageIndex = 0; }
+  grid.setAttribute('aria-busy', 'true'); status.hidden = false; status.textContent = 'Loading the collection…';
+  $('#previous-page').disabled = $('#next-page').disabled = true;
+  const values = filters(); sort.disabled = false;
+  clear.hidden = !values.search.trim() && values.category === 'all' && values.sort === 'featured' && selectedSubcategory === 'all';
+  const selected = categories.find(c => c.id === values.category);
+  const section = $('.catalog-section'), color = selected?.accent || '#7e6049';
+  section.style.setProperty('--category-accent', color); section.style.setProperty('--category-columns', selected?.columns || 3);
+  const rgb = [1,3,5].map(i=>parseInt(color.slice(i,i+2),16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);
+  section.style.setProperty('--category-ink', rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722>.179?'#28221c':'#fff');
+  const availableSubs = subcategories.filter(s => s.category === values.category);
+  if (!availableSubs.some(s => s.id === selectedSubcategory)) selectedSubcategory = 'all';
+  values.subcategory = selectedSubcategory;
+  subnav.innerHTML = availableSubs.length ? '<button type="button" data-subcategory="all" aria-current="'+(selectedSubcategory === 'all')+'">All pieces</button>' + availableSubs.map(s=>`<button type="button" data-subcategory="${e(s.id)}" aria-current="${s.id===selectedSubcategory}">${e(s.name)}</button>`).join('') : '';
 
-function updateURL() {
-  const url = new URL(window.location.href);
-  for (const key of ["category", "search", "sort"])
-    url.searchParams.delete(key);
-  if (category.value !== "all")
-    url.searchParams.set("category", category.value);
-  if (search.value.trim()) url.searchParams.set("search", search.value.trim());
-  if (sort.value !== "featured") url.searchParams.set("sort", sort.value);
-  window.history.replaceState(
-    null,
-    "",
-    `${url.pathname}${url.search}${url.hash}`,
-  );
-}
-
-function renderProducts(syncURL = true) {
-  const query = normalize(search.value.trim());
-  const results = products.filter((product) => {
-    const matchingCategory =
-      category.value === "all" || product.category === category.value;
-    const searchable = normalize(
-      `${product.name} ${product.description} ${categoryName(product.category)} ${product.material} ${product.finish}`,
-    );
-    return matchingCategory && (!query || searchable.includes(query));
-  });
-  if (sort.value === "price-asc") results.sort((a, b) => a.price - b.price);
-  if (sort.value === "price-desc") results.sort((a, b) => b.price - a.price);
-  if (sort.value === "name")
-    results.sort((a, b) => a.name.localeCompare(b.name));
-  if (sort.value === "featured")
-    results.sort(
-      (a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)),
-    );
-  count.textContent = `${results.length} ${results.length === 1 ? "piece" : "pieces"} to make yourself at home`;
-  clearButton.hidden =
-    !query && category.value === "all" && sort.value === "featured";
-  grid.innerHTML = results.length
-    ? results.map(productCard).join("")
-    : `<div class="catalog-empty">
-    <span class="empty-icon">${icons.search}</span><h2>A fresh search, a fresh start.</h2>
-    <p>We couldn't find a match${search.value.trim() ? ` for “${escapeHTML(search.value.trim())}”` : " in this category"}. Try another search or explore all our example furniture.</p>
-    <button type="button" class="button button-primary" data-action="reset-filters">Explore all furniture ${icons.arrow}</button>
-  </div>`;
-  if (syncURL) updateURL();
-}
-
-function resetFilters() {
-  search.value = "";
-  category.value = "all";
-  sort.value = "featured";
-  renderProducts();
-  search.focus();
-}
-
-async function loadProducts() {
-  grid.setAttribute("aria-busy", "true");
-  status.hidden = false;
-  status.textContent = "Getting your next favorite pieces ready…";
+  $('h1').innerHTML = selected ? e(selected.name) : 'Find your kind of <em>home.</em>';
+  $('.intro-row p').textContent = selected?.description || 'Discover furniture for all the living in between.';
+  const url = new URL(location.href);
+  for (const key of ['search', 'category', 'sort', 'subcategory']) url.searchParams.delete(key);
+  if (values.search.trim()) url.searchParams.set('search', values.search.trim());
+  if (values.category !== 'all') url.searchParams.set('category', values.category);
+  if (selectedSubcategory !== 'all') url.searchParams.set('subcategory', selectedSubcategory);
+  if (values.sort !== 'featured') url.searchParams.set('sort', values.sort);
+  history.replaceState(null, '', url);
   try {
-    products = await getProducts();
-    renderProducts(false);
-    status.hidden = true;
+    const page = await getProductPage({ ...values, cursor: reset ? null : pages.at(-1)?.cursor });
+    if (seq !== generation) return;
+    if (!reset && !page.products.length && pages.length) pages.at(-1).hasMore = false;
+    else pages.push(page);
+    pageIndex = pages.length - 1; render(); status.hidden = true;
   } catch (error) {
-    status.innerHTML = `<p>We couldn't load the example collection. Please try again.</p><button type="button" class="button button-secondary" id="retry-catalog">Try again</button>`;
-    document
-      .querySelector("#retry-catalog")
-      .addEventListener("click", loadProducts);
-    count.textContent = "Collection unavailable";
-  } finally {
-    grid.setAttribute("aria-busy", "false");
-  }
+    if (seq !== generation) return;
+    grid.replaceChildren(); pagination.hidden = true; count.textContent = 'Collection unavailable';
+    status.innerHTML = '<p></p><button class="button button-secondary" id="retry-catalog" type="button">Try again</button>';
+    status.querySelector('p').textContent = error.message || 'The collection could not be loaded.';
+    $('#retry-catalog').addEventListener('click', () => void load(true));
+  } finally { if (seq === generation) grid.setAttribute('aria-busy', 'false'); }
 }
-
-if (grid && search && category && sort && count && clearButton && status) {
-  category.innerHTML = `<option value="all">All furniture</option>${categories.map((item) => `<option value="${escapeHTML(item.id)}">${escapeHTML(item.name)}</option>`).join("")}`;
-  const query = new URLSearchParams(window.location.search);
-  const initialCategory = query.get("category");
-  category.value = categories.some((item) => item.id === initialCategory)
-    ? initialCategory
-    : "all";
-  search.value = (query.get("search") || "").slice(0, 200);
-  sort.value = sortValues.has(query.get("sort"))
-    ? query.get("sort")
-    : "featured";
-  search.addEventListener("input", () => renderProducts());
-  category.addEventListener("change", () => renderProducts());
-  sort.addEventListener("change", () => renderProducts());
-  clearButton.addEventListener("click", resetFilters);
-  grid.addEventListener("click", (event) => {
-    if (event.target.closest('[data-action="reset-filters"]')) resetFilters();
-  });
-  search
-    .closest("form")
-    ?.addEventListener("submit", (event) => event.preventDefault());
-  setupProductInteractions();
-  void loadProducts();
-}
+function reset() { clearTimeout(debounce); search.value = ''; selectedSubcategory = 'all'; category.value = 'all'; sort.value = 'featured'; void load(); }
+search.placeholder = 'Search name, SKU or material…'; search.maxLength = 160;
+search.addEventListener('input', () => { clearTimeout(debounce); generation++; debounce = setTimeout(() => void load(), 500); });
+for (const input of [category, sort]) input.addEventListener('change', () => { clearTimeout(debounce); void load(); });
+subnav.addEventListener('click', event => { const button=event.target.closest('[data-subcategory]'); if(button){selectedSubcategory=button.dataset.subcategory; void load();} });
+clear.addEventListener('click', reset);
+$('#previous-page').addEventListener('click', () => { if (pageIndex > 0) { pageIndex--; render(); grid.scrollIntoView({ block: 'start' }); } });
+$('#next-page').addEventListener('click', () => { if (pageIndex < pages.length - 1) { pageIndex++; render(); } else void load(false); });
+search.closest('form')?.addEventListener('submit', event => { event.preventDefault(); clearTimeout(debounce); void load(); });
+setupProductInteractions();
+try {
+  [categories, subcategories] = await Promise.all([getCategories(), getSubcategories()]);
+  category.innerHTML = '<option value="all">All furniture</option>' + categories.map(c => `<option value="${e(c.id)}">${e(c.name)}</option>`).join('');
+  const params = new URLSearchParams(location.search);
+  category.value = categories.some(c => c.id === params.get('category')) ? params.get('category') : 'all';
+  search.value = (params.get('search') || '').slice(0, 160);
+  sort.value = ['featured', 'price-asc', 'price-desc', 'name'].includes(params.get('sort')) ? params.get('sort') : 'featured';
+  await load();
+} catch (error) { status.hidden = false; status.textContent = error.message; count.textContent = 'Collection unavailable'; pagination.hidden = true; const retry = document.createElement('button'); retry.type = 'button'; retry.className = 'button button-secondary'; retry.textContent = 'Try again'; retry.addEventListener('click', () => location.reload()); status.append(retry); }
