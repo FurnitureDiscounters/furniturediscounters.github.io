@@ -30,8 +30,9 @@ export function validateDatabase(input, { publicOnly = false } = {}) {
   unique(orders,'orders',20000);
   const numbers = new Set();
   for (const o of orders) {
-    if (!text(o.number,80) || !o.number.trim() || numbers.has(o.number.trim().toUpperCase()) || !text(o.name,100) || !text(o.email,254) || !text(o.phone,40) || !text(o.notes,2000) || !Array.isArray(o.items) || !o.items.length || o.items.length > 100 || o.items.some(i => !object(i) || !id(i.productId) || !text(i.name,160) || !text(i.sku,80) || !money(i.priceCents) || !Number.isInteger(i.quantity) || i.quantity < 1 || i.quantity > 1000) || !Number.isFinite(Date.parse(o.createdAt))) fail('An order has invalid fields or a duplicate order number.');
-    numbers.add(o.number.trim().toUpperCase());
+    if ((o.week!==undefined&&o.week!==''&&!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(o.week))||(o.lookupKey!==undefined&&!text(o.lookupKey,80))) fail('An order has invalid week metadata.');
+    if (!text(o.number,80) || !o.number.trim() || numbers.has(`${o.week||''}:${o.number.trim().toUpperCase()}`) || !text(o.name,100) || !text(o.email,254) || !text(o.phone,40) || !text(o.notes,2000) || !Array.isArray(o.items) || !o.items.length || o.items.length > 100 || o.items.some(i => !object(i) || !id(i.productId) || !text(i.name,160) || !text(i.sku,80) || !money(i.priceCents) || !Number.isInteger(i.quantity) || i.quantity < 1 || i.quantity > 1000) || !Number.isFinite(Date.parse(o.createdAt))) fail('An order has invalid fields or a duplicate order number.');
+    numbers.add(`${o.week||''}:${o.number.trim().toUpperCase()}`);
   }
   // Reconstruct known fields: imported private/unrecognized keys never flow into the public catalog.
   const pick = (v, keys) => Object.fromEntries(keys.map(k => [k,v[k]]));
@@ -40,7 +41,7 @@ export function validateDatabase(input, { publicOnly = false } = {}) {
     subcategories:input.subcategories.map(v => pick(v,['id','category','name','description','active'])),
     products:input.products.map(v => pick(v,['id','name','sku','description','priceCents','oldPriceCents','stock','category','subcategory','dimensions','material','finish','images','active','available','featured'])),
     settings:pick(input.settings,Object.keys(limits)),
-    orders:orders.map(v => ({ ...pick(v,['id','number','name','email','phone','notes','createdAt']), items:v.items.map(i => pick(i,['productId','name','sku','priceCents','quantity'])) })) };
+    orders:orders.map(v => ({ ...pick(v,['id','number','week','lookupKey','name','email','phone','notes','createdAt']), items:v.items.map(i => pick(i,['productId','name','sku','priceCents','quantity'])) })) };
 }
 export function publicCatalog(db) {
   const safe = validateDatabase(db);

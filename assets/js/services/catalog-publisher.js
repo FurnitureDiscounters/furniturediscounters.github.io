@@ -1,5 +1,6 @@
-import { getAuth, setPersistence, inMemoryPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, connectAuthEmulator, sendEmailVerification, reload } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, setPersistence, inMemoryPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, connectAuthEmulator, sendEmailVerification, reload } from 'firebase/auth';
 import { getApps } from 'firebase/app';
+import { getFirestore as liveFirestore, connectFirestoreEmulator as connectLiveEmulator, onSnapshot, collection as liveCollection, doc as liveDoc, query as liveQuery, where as liveWhere } from 'firebase/firestore';
 import { doc, getDoc, getDocs, collection, query, where, setDoc, serverTimestamp, runTransaction } from 'firebase/firestore/lite';
 import { catalogDatabase, readFirebaseCatalog, photoKey } from './firebase-catalog.js';
 import { decodePublicOrder } from './public-order-service.js';
@@ -53,5 +54,42 @@ export async function publishCatalog(database,readPhoto,onProgress=()=>{},expect
   }finally{publishing=false;}
 }
 export async function verifyPublisherEmail(){const user=publisherAuth().currentUser;if(!user)throw new Error('Sign in first.');await sendEmailVerification(user);}
-export async function loadEditorCatalog(){const db=catalogDatabase(),saved=await getDoc(doc(db,'editor','current'));if(!saved.exists())throw new Error('No editor database has been published to Firebase yet.');const {revision,parts}=saved.data();if(!/^[A-Za-z0-9_-]{1,80}$/.test(revision)||!Number.isInteger(parts)||parts<1||parts>100)throw new Error('Invalid cloud database metadata.');const docs=await Promise.all(Array.from({length:parts},(_,i)=>getDoc(doc(db,'editorVersions',revision,'parts',String(i)))));if(docs.some(d=>!d.exists()))throw new Error('The cloud editor database is incomplete.');const database=JSON.parse(docs.map(d=>d.data().json).join(''));const orders=await getDocs(query(collection(db,'orders'),where('revision','==',revision)));database.orders=orders.docs.map(d=>JSON.parse(d.data().json));const inquiries=await getDocs(collection(db,'pickupRequests'));const numbers=new Set(database.orders.map(o=>o.number));for(const d of inquiries.docs){const o=decodePublicOrder(d.data());if(!numbers.has(o.number))database.orders.push({id:d.id,number:o.number,name:'',email:'',phone:'',notes:'Website inquiry; confirm prices and pickup with the customer.',createdAt:o.createdAt.toDate().toISOString(),items:o.items});}return {database,revision};}
+export async function loadEditorCatalog(){const db=catalogDatabase(),saved=await getDoc(doc(db,'editor','current'));if(!saved.exists())throw new Error('No editor database has been published to Firebase yet.');const {revision,parts}=saved.data();if(!/^[A-Za-z0-9_-]{1,80}$/.test(revision)||!Number.isInteger(parts)||parts<1||parts>100)throw new Error('Invalid cloud database metadata.');const docs=await Promise.all(Array.from({length:parts},(_,i)=>getDoc(doc(db,'editorVersions',revision,'parts',String(i)))));if(docs.some(d=>!d.exists()))throw new Error('The cloud editor database is incomplete.');const database=JSON.parse(docs.map(d=>d.data().json).join(''));const orders=await getDocs(query(collection(db,'orders'),where('revision','==',revision)));database.orders=orders.docs.map(d=>JSON.parse(d.data().json));const inquiries=await getDocs(collection(db,'pickupRequests'));const numbers=new Set(database.orders.map(o=>`${o.week||''}:${o.number}`));for(const d of inquiries.docs){const o=decodePublicOrder(d.data());if(!numbers.has(`${o.week||''}:${o.number}`))database.orders.push({id:d.id,number:o.number,week:o.week||'',lookupKey:o.lookupKey||'',name:'',email:'',phone:'',notes:'Website inquiry; confirm prices and pickup with the customer.',createdAt:o.createdAt.toDate().toISOString(),items:o.items});}return {database,revision};}
 export { readFirebaseCatalog };
+
+let liveDatabase;
+function orderDatabase() {
+  if(liveDatabase)return liveDatabase;
+  publisherAuth();liveDatabase=liveFirestore(getApps().find(a=>a.name==='furniture-catalog'));
+  if(['localhost','127.0.0.1'].includes(location.hostname)&&new URLSearchParams(location.search).get('emulator')==='1')connectLiveEmulator(liveDatabase,'127.0.0.1',8080);
+  return liveDatabase;
+}
+// Order subscriptions do not load or replace the editor's catalog or local drafts.
+export function watchStoreOrders(onOrders,onStatus) {
+  let stops=[],generation=0;
+  const clear=()=>{generation++;for(const stop of stops)stop();stops=[];};
+  const stopAuth=onAuthStateChanged(publisherAuth(),user=>{
+    clear();onOrders([]);
+    if(!isOwner(user)){onStatus(user?'Verify your store email to see live orders.':'Connect Firebase to see incoming orders live.');return;}
+    const db=orderDatabase(),session=generation;
+    let inquiries=[],privateOrders=[],stopPrivate=()=>{},inquiriesReady=false,privateReady=false,failed=false;
+    const emit=()=>{if(session!==generation)return;const merged=new Map(inquiries.map(o=>[`${o.week||''}:${o.number}`,o]));for(const o of privateOrders)merged.set(`${o.week||''}:${o.number}`,o);onOrders([...merged.values()]);if(inquiriesReady&&privateReady&&!failed)onStatus('Live · Incoming orders update automatically.');};
+    const error=e=>{if(session===generation){failed=true;onStatus('Live orders unavailable: '+(e.message||'Check your Firebase access.'));}};
+    onStatus('Connecting to live orders…');
+    stops.push(onSnapshot(liveCollection(db,'pickupRequests'),snapshot=>{
+      if(session!==generation)return;
+      inquiries=snapshot.docs.map(d=>{const o=decodePublicOrder(d.data());return {id:d.id,number:o.number,week:o.week||'',lookupKey:o.lookupKey||'',name:'',email:'',phone:'',notes:'Website inquiry; confirm prices and pickup with the customer.',createdAt:o.createdAt?.toDate().toISOString()||'',items:o.items};});inquiriesReady=true;emit();
+    },error));
+    stops.push(onSnapshot(liveDoc(db,'editor','current'),snapshot=>{
+      if(session!==generation)return;
+      stopPrivate();privateOrders=[];privateReady=false;
+      if(!snapshot.exists()){privateReady=true;emit();return;}
+      const revision=snapshot.data().revision;
+      stopPrivate=onSnapshot(liveQuery(liveCollection(db,'orders'),liveWhere('revision','==',revision)),orders=>{
+        if(session!==generation)return;privateOrders=orders.docs.map(d=>JSON.parse(d.data().json));privateReady=true;emit();
+      },error);
+    },error));
+    stops.push(()=>stopPrivate());
+  });
+  return ()=>{clear();stopAuth();};
+}

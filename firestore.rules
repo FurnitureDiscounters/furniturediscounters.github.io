@@ -58,7 +58,7 @@ service cloud.firestore {
         (n < 20 || line(v['19']));
     }
     match /pickupRequests/{id} {
-      // The full, cryptographically random number is the lookup key. No listings or personal data.
+      // Internal keys support legacy references and weekly numeric references. No public listings or personal data.
       allow get: if number(id);
       allow create: if number(id) && request.resource.data.keys().hasAll(['number','items','createdAt']) &&
         request.resource.data.keys().hasOnly(['number','items','createdAt']) &&
