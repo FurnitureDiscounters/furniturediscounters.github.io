@@ -46,3 +46,5 @@ npx firebase emulators:exec --project demo-furniture-discounters --only auth,fir
 ```
 
 Each command starts with a fresh emulator database. Rebuild the editor before running the browser checks. Product photos resolve from the available local/cloud catalog; older records whose products have been removed may show Photo unavailable. Existing inquiry records have no historical photo path in their immutable schema.
+
+The simplified order editor removes customer contact and quantity controls, retains Add furniture (one piece per addition), and preserves older imported contact/quantity data internally. The standalone HTML is provided at `downloads/furniture-editor.html`; the ZIP contains the same HTML. Offline save/backup browser checks and cloud editor integration checks cover the simplified form.
