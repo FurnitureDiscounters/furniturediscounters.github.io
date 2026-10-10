@@ -1,13 +1,19 @@
 import { collectionPhotoPath } from '../collection-photos.js';
-import { readFirebaseCatalog, cloudPhoto } from './firebase-catalog.js';
+import { readFirebaseCatalog, cloudPhoto, clearCloudPhotos } from './firebase-catalog.js';
 import { validateDatabase, filterProducts } from '../catalog-model.js';
 export const PAGE_SIZE = 24;
-let database, loading;
-async function catalog() {
-  if(loading)return loading;
-  const local=['localhost','127.0.0.1'].includes(location.hostname)&&new URLSearchParams(location.search).get('catalog')==='local';
-  loading=(local?fetch('assets/data/catalog.json',{cache:'no-cache'}).then(async r=>{if(!r.ok)throw new Error('The collection is temporarily unavailable. Please try again later.');return validateDatabase(await r.json(),{publicOnly:true});}):readFirebaseCatalog().then(result=>result.database)).then(value=>database=value).catch(error=>{loading=null;throw error;});
+let database,loading,catalogRevision,epoch=0,watching;
+const localCatalog=()=>['localhost','127.0.0.1'].includes(location.hostname)&&new URLSearchParams(location.search).get('catalog')==='local';
+async function catalog(){
+  if(loading)return loading;const version=epoch;
+  loading=(localCatalog()?fetch('assets/data/catalog.json',{cache:'no-cache'}).then(async r=>{if(!r.ok)throw new Error('The collection is temporarily unavailable. Please try again later.');return validateDatabase(await r.json(),{publicOnly:true});}):readFirebaseCatalog().then(result=>{if(version===epoch)catalogRevision=result.revision;return result.database;})).then(value=>{if(version!==epoch)return catalog();database=value;return value;}).catch(error=>{if(version!==epoch)return catalog();loading=null;throw error;});
   return loading;
+}
+export function startCatalogUpdates(){
+  if(localCatalog())return Promise.resolve();
+  return watching||=(import('./catalog-updates.js').then(({subscribeCatalogRevision})=>subscribeCatalogRevision(revision=>{
+    if(revision===catalogRevision)return;catalogRevision=revision;epoch++;loading=null;clearCloudPhotos();window.dispatchEvent(new Event('catalog-updated'));
+  })).catch(()=>{watching=null;}));
 }
 const localPhotos=()=>['localhost','127.0.0.1'].includes(location.hostname)&&new URLSearchParams(location.search).get('catalog')==='local';
 async function withPhotos(product,full=false){const image=await photoURL(product.images[0]||'');return {...displayProduct(product),image,images:full?await Promise.all(product.images.map(photoURL)):product.images};}

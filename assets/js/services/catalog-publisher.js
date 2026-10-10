@@ -53,7 +53,7 @@ export async function publishCatalog(database,readPhoto,onProgress=()=>{},expect
     // Retire old chunks after the new pointer is live; failed cleanup never reverses publication.
     let cleanupNeeded=false;
     if(previous.exists()){try{const {deleteDoc}=await import('firebase/firestore/lite');for(let i=0;i<previous.data().parts;i++)await deleteDoc(doc(db,'catalogVersions',base,'parts',String(i)));if(previousEditor.exists()){const old=previousEditor.data();for(let i=0;i<old.parts;i++)await deleteDoc(doc(db,'editorVersions',old.revision,'parts',String(i)));const oldOrders=await getDocs(query(collection(db,'orders'),where('revision','==',old.revision)));for(const order of oldOrders.docs)await deleteDoc(order.ref);}}catch{cleanupNeeded=true;}}
-    return {revision,products:catalog.products.length,orders:database.orders.length,cleanupNeeded};
+    return {revision,products:catalog.products.length,orders:database.orders.length,collectionPhotos:[...catalog.categories,...catalog.subcategories].filter(c=>c.imagePath).length,cleanupNeeded};
   }finally{publishing=false;}
 }
 export async function verifyPublisherEmail(){const user=publisherAuth().currentUser;if(!user)throw new Error('Sign in first.');await sendEmailVerification(user);}

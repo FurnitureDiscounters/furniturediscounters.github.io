@@ -73,12 +73,17 @@ $('#previous-page').addEventListener('click', () => { if (pageIndex > 0) { pageI
 $('#next-page').addEventListener('click', () => { if (pageIndex < pages.length - 1) { pageIndex++; render(); } else void load(false); });
 search.closest('form')?.addEventListener('submit', event => { event.preventDefault(); clearTimeout(debounce); void load(); });
 setupProductInteractions();
-try {
-  [categories, subcategories] = await Promise.all([getCategories(), getSubcategories()]);
-  category.innerHTML = '<option value="all">All furniture</option>' + categories.map(c => `<option value="${e(c.id)}">${e(c.name)}</option>`).join('');
-  const params = new URLSearchParams(location.search);
-  category.value = categories.some(c => c.id === params.get('category')) ? params.get('category') : 'all';
-  search.value = (params.get('search') || '').slice(0, 160);
-  sort.value = ['featured', 'price-asc', 'price-desc', 'name'].includes(params.get('sort')) ? params.get('sort') : 'featured';
-  await load();
-} catch (error) { status.hidden = false; status.textContent = error.message; count.textContent = 'Collection unavailable'; pagination.hidden = true; const retry = document.createElement('button'); retry.type = 'button'; retry.className = 'button button-secondary'; retry.textContent = 'Try again'; retry.addEventListener('click', () => location.reload()); status.append(retry); }
+let collectionsGeneration=0;
+async function refreshCollections(initial=false){
+  const version=++collectionsGeneration;
+  try{
+    const selected=initial?new URLSearchParams(location.search).get('category'):category.value;
+    const rows=await Promise.all([getCategories(),getSubcategories()]);if(version!==collectionsGeneration)return;
+    [categories,subcategories]=rows;category.innerHTML='<option value="all">All furniture</option>'+categories.map(c=>`<option value="${e(c.id)}">${e(c.name)}</option>`).join('');
+    category.value=categories.some(c=>c.id===selected)?selected:'all';
+    if(initial){const params=new URLSearchParams(location.search);search.value=(params.get('search')||'').slice(0,160);sort.value=['featured','price-asc','price-desc','name'].includes(params.get('sort'))?params.get('sort'):'featured';}
+    await load();
+  }catch(error){if(version!==collectionsGeneration)return;status.hidden=false;status.textContent=error.message;count.textContent='Collection unavailable';pagination.hidden=true;const retry=document.createElement('button');retry.type='button';retry.className='button button-secondary';retry.textContent='Try again';retry.addEventListener('click',()=>void refreshCollections());status.append(retry);}
+}
+window.addEventListener('catalog-updated',()=>void refreshCollections());
+await refreshCollections(true);

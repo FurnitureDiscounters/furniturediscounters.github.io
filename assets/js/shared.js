@@ -85,7 +85,7 @@ if (
 }
 
 // Business details and announcements are editable without changing HTML.
-import { getSettings, getCategories } from './services/product-service.js';
+import { getSettings, getCategories, startCatalogUpdates } from './services/product-service.js';
 async function updateBusinessInformation() {
   try {
     const settings = await getSettings();
@@ -104,4 +104,5 @@ async function updateBusinessInformation() {
   } catch { /* The store link remains available. */ }
 }
 window.addEventListener('storage', refreshCartCount);
-void updateBusinessInformation();
+window.addEventListener('catalog-updated',()=>void updateBusinessInformation());
+void updateBusinessInformation().finally(()=>startCatalogUpdates());

@@ -22,6 +22,7 @@ export async function readFirebaseCatalog() {
   return {database:validateDatabase(JSON.parse(snapshots.map(s=>s.data().json).join('')),{publicOnly:true}),revision};
 }
 const photos=new Map();
+export const clearCloudPhotos=()=>photos.clear();
 export async function photoKey(path) { return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(path))),v=>v.toString(16).padStart(2,'0')).join(''); }
 export async function cloudPhoto(path) {
   if(!path.startsWith('assets/products/'))return path;

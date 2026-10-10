@@ -1,0 +1,24 @@
+"""Real publication: existing collection photo uploads persist before Publish; open storefronts update live."""
+from playwright.sync_api import sync_playwright,expect
+EDITOR='http://127.0.0.1:4175/furniture-editor.html?emulator=1'
+BASE='http://127.0.0.1:4173/'
+def publish(page,count):
+ page.locator('#firebase-publish').click();expect(page.locator('#firebase-status')).to_contain_text(f'{count} category/subcategory photos published.',timeout=30000)
+def photo(page,selector):
+ expect(page.locator(selector)).to_have_attribute('src',__import__('re').compile(r'^data:image/webp;base64,'),timeout=20000)
+ page.wait_for_function('(selector)=>document.querySelector(selector)?.naturalWidth>0',arg=selector)
+ return page.locator(selector).get_attribute('src')
+with sync_playwright() as p:
+ b=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox']);owner=b.new_context();editor=owner.new_page();editor.on('dialog',lambda d:d.accept());errors=[];editor.on('pageerror',lambda e:errors.append(str(e)));editor.goto(EDITOR);expect(editor.locator('#save-status')).to_contain_text('Saved on this computer');editor.locator('[data-category="living-room"]').click();editor.locator('#new-subcategory').click();editor.locator('#subcategory-form [name="name"]').fill('Sofas');sub=editor.locator('#subcategory-form [name="id"]').input_value();editor.locator('#subcategory-form .button-primary').click();expect(editor.locator('#subcategory-editor')).to_be_hidden();editor.locator('#firebase-login [name="password"]').fill('Emulator-only-test-1020');editor.locator('#firebase-login .button-secondary').click();expect(editor.locator('#firebase-status')).to_contain_text('Connected to Firebase');publish(editor,0)
+ public=b.new_context();home=public.new_page();store=public.new_page();navigation=[]
+ for page in [home,store]:
+  page.on('pageerror',lambda e:errors.append(str(e)));page.on('request',lambda r:navigation.append(r.url) if r.is_navigation_request() and r.frame==r.frame.page.main_frame else None)
+ home.goto(BASE+'index.html?emulator=1');store.goto(BASE+'store.html?emulator=1&category=living-room');home_img='#home-categories a[href="store.html?category=living-room"] img';cat_img='[data-store-category="living-room"] img';sub_img=f'[data-subcategory="{sub}"] img';expect(home.locator(home_img)).to_have_attribute('src','assets/images/sofa.webp',timeout=15000);expect(store.locator(sub_img)).to_have_attribute('src','assets/images/sofa.webp',timeout=15000);initial_navigations=len(navigation)
+ # Leave the form open and publish without clicking Save category.
+ editor.locator('#edit-category').click();editor.locator('#category-photo-upload').set_input_files('assets/images/bed.webp');expect(editor.locator('#category-photo-status')).to_contain_text('added and saved');publish(editor,1);first=photo(home,home_img);assert photo(store,cat_img)==first;assert photo(store,sub_img)==first
+ editor.locator('#cancel-category').click();editor.locator(f'[data-subcategory="{sub}"]').click();editor.locator('#edit-subcategory').click();editor.locator('#subcategory-photo-upload').set_input_files('assets/images/dining.webp');expect(editor.locator('#subcategory-photo-status')).to_contain_text('added and saved');publish(editor,2);expect(store.locator(sub_img)).not_to_have_attribute('src',first,timeout=20000);sub_source=photo(store,sub_img);assert sub_source!=first;assert photo(home,home_img)==first
+ editor.locator('#cancel-subcategory').click();editor.locator('#edit-category').click();editor.locator('#category-photo-upload').set_input_files('assets/images/desk.webp');expect(editor.locator('#category-photo-status')).to_contain_text('added and saved');publish(editor,2);expect(home.locator(home_img)).not_to_have_attribute('src',first,timeout=20000);second=photo(home,home_img);assert second!=first;expect(store.locator(cat_img)).to_have_attribute('src',second,timeout=20000);assert photo(store,cat_img)==second;assert photo(store,sub_img)==sub_source;assert len(navigation)==initial_navigations,navigation
+ # A freshly loaded official storefront gets the same latest cloud photos.
+ store.reload();expect(store.locator(cat_img)).to_have_attribute('src',second,timeout=20000);assert photo(store,cat_img)==second;assert photo(store,sub_img)==sub_source;editor.reload();expect(editor.locator('#save-status')).to_contain_text('Saved on this computer');editor.locator('[data-category="living-room"]').click();editor.locator('#edit-category').click();expect(editor.locator('#category-form [name="imagePath"]')).not_to_have_value('');editor.wait_for_function('document.querySelector("#category-photo-preview img")?.naturalWidth>0')
+ assert not errors,errors;b.close()
+print('PASS: category/subcategory photo uploads saved without separate form save; Firebase photo counts; live homepage/store changes across three publications; custom subcategory photo retained; refreshed website and reloaded editor show latest images.')

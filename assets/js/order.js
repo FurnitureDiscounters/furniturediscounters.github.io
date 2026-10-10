@@ -60,6 +60,7 @@ $('#copy-selection').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(requestText); toast('Selection copied. Send it to the store to ask about pickup.'); }
   catch { $('#selection-text').value = requestText; $('#selection-text').hidden = false; $('#selection-text').focus(); $('#selection-text').select(); }
 });
+window.addEventListener('catalog-updated',()=>{catalog.clear();void getSettings().then(settings=>{contact={...contact,...settings};updateContact();}).catch(()=>{});void renderCart();});
 window.addEventListener('cart-updated', () => void renderCart());
 window.addEventListener('storage', () => void renderCart());
 function updateContact() {
