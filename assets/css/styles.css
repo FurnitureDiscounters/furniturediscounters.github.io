@@ -2729,3 +2729,7 @@ input::placeholder {
 .site-header .brand .brand-name, .footer-brand .brand .brand-name { display: flex; flex-direction: column; gap: 3px; color: rgb(205,185,143); font-family: 'Montserrat', 'Century Gothic', 'Arial', sans-serif; font-weight: 700; font-size: 20px; line-height: 1; letter-spacing: -.035em; white-space: nowrap; }
 @media (max-width: 850px) { .site-header .brand .brand-logo { width: 78px; } .site-header .brand .brand-name { font-size: 16px; } }
 @media (max-width: 600px) { .site-header .brand .brand-logo { width: 64px; } .site-header .brand .brand-name { font-size: 13px; } }
+
+.site-header .header-inner > .brand img.brand-logo { width: 108px; height: auto; max-height: 58px; max-width: none; }
+@media (max-width: 850px) { .site-header .header-inner > .brand img.brand-logo { width: 78px; height: auto; } }
+@media (max-width: 600px) { .site-header .header-inner > .brand img.brand-logo { width: 64px; height: auto; } }
