@@ -4,7 +4,7 @@ GitHub Pages storefront connected to the existing free Spark **Standard Firestor
 
 **Publish to Firebase** uploads the full editor catalog, optimized photographs and private order records, then atomically switches the public catalog to the new version. The website reads Firebase instead of the bundled empty JSON catalog. **Load from Firebase** restores the catalog, private orders and customer inquiry numbers on another computer. Customer contact details stay private. No preparing/ready statuses, payments or stock reservations are implemented.
 
-[LOCAL-EDITOR.md](LOCAL-EDITOR.md) explains the editor. [FIREBASE-SETUP.md](FIREBASE-SETUP.md) covers rules and account setup. No real inventory is fabricated. Production rules, account creation and website publication have not been performed from this environment.
+[LOCAL-EDITOR.md](LOCAL-EDITOR.md) explains the editor. [FIREBASE-SETUP.md](FIREBASE-SETUP.md) covers rules and account setup. No real inventory is fabricated. The storefront and editor ZIP have been uploaded to GitHub using the FurnitureDiscounters account. GitHub Pages deploys `main` automatically. Production Firebase rules and store account setup still require the steps in [FIREBASE-SETUP.md](FIREBASE-SETUP.md).
 
 ```sh
 npm ci

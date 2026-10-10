@@ -1,6 +1,6 @@
 # Local catalog editor
 
-1. Download `/workspace/local-editor/furniture-editor.html` and open it in your browser.
+1. Download [furniture-editor.zip](https://furniturediscounters.github.io/downloads/furniture-editor.zip), extract it, and open `furniture-editor.html` in your browser.
 2. Choose or add a category, add subcategories, then add products and upload photographs.
 3. Use **Save database** to save a portable JSON file. Use **Backup with photos** for a complete backup.
 4. Connect your verified store account and click **Publish to Firebase** to upload products/photos/orders. Use **Load from Firebase** on another computer. Export website remains available as a static catalog backup.
